@@ -256,26 +256,6 @@ void Renderer_D3D::EndFrame()
 	mEntities.clear();
 	Shader::unBind();
 
-	// example code
-//	std::vector<Vertex> temp = 
-//	{
-//		{XMFLOAT4(0, -0.5f, 0, 1), XMFLOAT4(0,0,0,0)},
-//		{XMFLOAT4(-0.5f, 0.5f, 0, 1), XMFLOAT4(0,0,0,0)},
-//		{XMFLOAT4(0.5f, 0.5f, 0, 1), XMFLOAT4(0,0,0,0)}
-//	};
-//
-//	std::vector<UINT> temp2 = { 0, 1, 2 };
-//
-//	Mesh mesh(temp, temp2);
-//
-//		mDeviceContext->IASetVertexBuffers(0, 1, &mesh.mVertBuffer, &stride, &offset);
-//		mDeviceContext->IASetIndexBuffer(mesh.mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-//
-//		mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//
-//		mDeviceContext->DrawIndexed(3, 0, 0);
-//	//
-
 	GUI::UpdateAndDraw();
 	mSwapChain->Present(0, 0);
 }
