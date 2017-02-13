@@ -17,6 +17,9 @@ End Header --------------------------------------------------------*/
 #include <DX/d3d11shader.h>
 #include <DX/d3dcompiler.h>
 #include <vector>
+#include <iostream>
+
+#define D3D_COMPILE_STANDARD_FILE_INCLUDE ((ID3DInclude*)(UINT_PTR)1)
 
 void Shader::loadPreCopiled(const std::string &dir, const std::string &name, bool bind)
 {
@@ -24,30 +27,82 @@ void Shader::loadPreCopiled(const std::string &dir, const std::string &name, boo
 	std::string psPath = dir + name + "_PS.cso";
 	std::string gsPath = dir + name + "_G.cso";
 	
-	loadShader(vsPath, ShaderType::SHADER_VERTEX);
-	loadShader(psPath, ShaderType::SHADER_PIXEL);
-	loadShader(gsPath, ShaderType::SHADER_GEOMETRY);
+	loadShader(vsPath, ShaderType::SHADER_VERTEX, true);
+	loadShader(psPath, ShaderType::SHADER_PIXEL, true);
+	loadShader(gsPath, ShaderType::SHADER_GEOMETRY, true);
 	
 	if (bind) Bind();
 }
 
-void Shader::loadShader(const std::string &file, ShaderType type)
+void Shader::loadShaderFromFile(const std::string &dir, const std::string &name, bool bind)
+{
+	std::string vsPath = dir + name + "_VS.hlsl";
+	std::string psPath = dir + name + "_PS.hlsl";
+	std::string gsPath = dir + name + "_G.hlsl";
+
+	loadShader(vsPath, ShaderType::SHADER_VERTEX, false);
+	loadShader(psPath, ShaderType::SHADER_PIXEL, false);
+	loadShader(gsPath, ShaderType::SHADER_GEOMETRY, false);
+
+	if (bind) Bind();
+}
+
+void Shader::loadShader(const std::string &file, ShaderType type, bool preCompiled)
 {
 	std::ifstream in;
 	in.open(file, std::ifstream::in | std::ifstream::binary);
 
 	// test for open
-	assert(in.is_open() > 0);
+	if (!in.is_open())
+	{
+		std::cout << "could not load shader "+ file<< std::endl;
+		return;
+	}
 
-	void *data;
+	void *data = nullptr;
+	size_t size = 0;
 
-	size_t size;
-	in.seekg(0, std::ios::end);
-	size = size_t(in.tellg());
-	data = new char[size];
-	in.seekg(0, std::ios::beg);
-	in.read(reinterpret_cast<char*>(data), size);
-	in.close();
+	if (preCompiled)
+	{
+		in.seekg(0, std::ios::end);
+		size = size_t(in.tellg());
+		data = new char[size];
+		in.seekg(0, std::ios::beg);
+		in.read(reinterpret_cast<char*>(data), size);
+		in.close();
+	}
+	//else
+	//{
+	//	ID3DBlob *dataBlob;
+	//	ID3DBlob *errorBlob;
+	//
+	//	std::string fLevel;
+	//	switch (type)
+	//	{
+	//	case SHADER_PIXEL:
+	//		fLevel = "ps_";
+	//		break;
+	//	case SHADER_VERTEX:
+	//		fLevel = "vs_";
+	//		break;
+	//	case SHADER_GEOMETRY:
+	//		fLevel = "gs_";
+	//		break;
+	//	}
+	//	fLevel += "4_1";
+	//	std::wstring wString(file.begin(), file.end());
+	//	HRESULT hr = 0;
+	//	
+	//	D3DX11CompileFromFile(wString.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+	//										nullptr, fLevel.c_str(), 0, 0, nullptr, &dataBlob, &errorBlob, &hr);
+	//	if (FAILED(hr))
+	//	{
+	//		std::cout << reinterpret_cast<char *>(errorBlob->GetBufferPointer()) << std::endl;
+	//		assert(0);
+	//	}
+	//	data = dataBlob->GetBufferPointer();
+	// 	size = dataBlob->GetBufferSize();
+	//}
 
 	switch(type)
 	{
@@ -163,8 +218,6 @@ void Shader::unBind(UINT type)
 
 Shader::~Shader()
 {
-	SafeRelease(mVS);
-	SafeRelease(mPS);
 	SafeRelease(mVertShader);
 	SafeRelease(mPixelShader);
 	SafeRelease(mInputLayout);

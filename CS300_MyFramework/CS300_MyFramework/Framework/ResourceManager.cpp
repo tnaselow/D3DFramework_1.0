@@ -16,6 +16,25 @@ End Header --------------------------------------------------------*/
 #include <sstream>
 
 std::map<std::string, Mesh> ResourceManager::mMeshes;
+std::map<std::string, Shader> ResourceManager::mShaders;
+
+
+Shader *ResourceManager::loadShader(std::string name, std::string dir)
+{
+	auto it = mShaders.find(name);
+	if (it != mShaders.end())
+		return &mShaders[name];
+
+	mShaders[name].loadPreCopiled(dir, name);
+	return &mShaders[name];
+}
+Shader *ResourceManager::getShader(std::string name)
+{
+	auto it = mShaders.find(name);
+	if (it != mShaders.end())
+		return &mShaders[name];
+}
+
 
 Mesh *ResourceManager::loadMesh(std::string name, std::string filePath)
 {

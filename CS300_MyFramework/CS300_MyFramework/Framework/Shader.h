@@ -31,13 +31,13 @@ class Shader
 
 		~Shader();
 		void loadPreCopiled(const std::string &dir, const std::string &name, bool bind = false);
+		void loadShaderFromFile(const std::string &dir, const std::string &name, bool bind = false);
 		void Bind(UINT type = SHADER_PIXEL | SHADER_VERTEX | SHADER_GEOMETRY);
 		static void unBind(UINT type = SHADER_PIXEL | SHADER_VERTEX | SHADER_GEOMETRY);
 		
 	private:
-		void loadShader(const std::string &file, ShaderType type);
+		void loadShader(const std::string &file, ShaderType type, bool preCompiled);
 		void loadInputElemnts(void *data, size_t size);
-		ID3DBlob *mVS, *mPS;
 		ID3D11VertexShader *mVertShader;
 		ID3D11PixelShader  *mPixelShader;
 		ID3D11GeometryShader *mGeometryShader;

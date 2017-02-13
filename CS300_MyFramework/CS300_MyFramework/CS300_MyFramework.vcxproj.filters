@@ -256,5 +256,7 @@
     <FxCompile Include="Shaders\Color_VS.hlsl" />
     <FxCompile Include="Shaders\Color_PS.hlsl" />
     <FxCompile Include="Shaders\Color_G.hlsl" />
+    <FxCompile Include="Shaders\PhongVert_VS.hlsl" />
+    <FxCompile Include="Shaders\PhongVert_PS.hlsl" />
   </ItemGroup>
 </Project>
