@@ -28,7 +28,6 @@ ID3D11DepthStencilView *Renderer_D3D::mRTV_DepthStencil;
 ID3D11Texture2D		  *Renderer_D3D::mBackBuffTexture;
 ID3D11Texture2D		  *Renderer_D3D::mDepthStencilTexture;
 ID3D11Debug			  *Renderer_D3D::mDebugInterface;
-ID3D11Buffer		  *Renderer_D3D::mProjBuffer;
 ID3D11RasterizerState *Renderer_D3D::mRasterState;
 std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 
@@ -195,7 +194,7 @@ void Renderer_D3D::DrawEntity(Entity &entity, Shader &shader)
 
 void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 {
-	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
+	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_VERTEX);
 }
 
 void Renderer_D3D::EndFrame()
@@ -256,26 +255,6 @@ void Renderer_D3D::EndFrame()
 	mEntities.clear();
 	Shader::unBind();
 
-	// example code
-//	std::vector<Vertex> temp = 
-//	{
-//		{XMFLOAT4(0, -0.5f, 0, 1), XMFLOAT4(0,0,0,0)},
-//		{XMFLOAT4(-0.5f, 0.5f, 0, 1), XMFLOAT4(0,0,0,0)},
-//		{XMFLOAT4(0.5f, 0.5f, 0, 1), XMFLOAT4(0,0,0,0)}
-//	};
-//
-//	std::vector<UINT> temp2 = { 0, 1, 2 };
-//
-//	Mesh mesh(temp, temp2);
-//
-//		mDeviceContext->IASetVertexBuffers(0, 1, &mesh.mVertBuffer, &stride, &offset);
-//		mDeviceContext->IASetIndexBuffer(mesh.mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-//
-//		mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//
-//		mDeviceContext->DrawIndexed(3, 0, 0);
-//	//
-
 	GUI::UpdateAndDraw();
 	mSwapChain->Present(0, 0);
 }
@@ -283,15 +262,16 @@ void Renderer_D3D::EndFrame()
 
 void Renderer_D3D::CleanUp()
 {
-	SafeRelease(mDevice);
-	SafeRelease(mDeviceContext);
-	SafeRelease(mSwapChain);
-	SafeRelease(mDebugInterface);
+	GUI::CleanUp();
+	for (int i = 0; i < BUFFER_NUM_BUFFERS; ++i)
+		SafeRelease(mC_Buffers[i]);
 	SafeRelease(mRTV_BackBuffer);
 	SafeRelease(mBackBuffTexture);
-	SafeRelease(mBackBuffTexture);
 	SafeRelease(mDepthStencilTexture);
-	GUI::CleanUp();
+	SafeRelease(mDebugInterface);
+	SafeRelease(mSwapChain);
+	SafeRelease(mDeviceContext);
+	SafeRelease(mDevice);
 }
 
 void Renderer_D3D::resizeBackBuffer(LPARAM lParam)

@@ -18,10 +18,13 @@ class ResourceManager
 {
 	public:
 		static Mesh *loadMesh(std::string name, std::string filePath);
-
+		
 		static Mesh *getMesh(std::string name);
-
+		
+		static Shader *loadShader(std::string name, std::string dir);
+		static Shader *getShader(std::string name);
 	private:
 		static std::map<std::string, Mesh> mMeshes;
-		ResourceManager(){}
+		static std::map<std::string, Shader> mShaders;
+		ResourceManager() {}
 };

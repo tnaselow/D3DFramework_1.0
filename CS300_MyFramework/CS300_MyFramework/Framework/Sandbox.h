@@ -16,24 +16,49 @@ End Header --------------------------------------------------------*/
 
 struct Light
 {
+	glm::vec4 position;
 	glm::vec4 direction;
+			
 	glm::vec4 ambient;
 	glm::vec4 diffuse;
+	glm::vec4 specular;
+
+	// TYPES
+	// 1 - dir
+	// 2 - point
+	// 3 - spot
+	unsigned type; 
+	glm::vec3 allign;
 };
 
 struct LightBufferData
 {
 	Light lights[8];
-	int numLights;
 
-	glm::vec3 padding;
+	int numLights;
+	glm::vec3 globalAmbient;
+
+	float innerRadius;
+	float outerRadius;
+	int falloff;
+	float allign_1;
+
+	glm::vec3 attCoeffs;
+	float allign_2;
+
+	glm::vec3 fogColor;
+	float allign_3;
+
+	glm::vec3 camPosition;
+	float allign_4;
 };
 
 struct Material
 {
-	Material() : ambient(0.1f, 0.1f, 0.1f, 1.0f),diffuse(1,1,1,1){}
+	Material() : ambient(0.1f, 0.1f, 0.1f, 1.0f),diffuse(1,1,1,1), specular(1,1,1,1){}
 	glm::vec4 ambient;
 	glm::vec4 diffuse;
+	glm::vec4 specular;
 };
 
 struct Entity

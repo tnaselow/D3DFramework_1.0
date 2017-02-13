@@ -34,7 +34,7 @@ namespace Sandbox
 {
 	void initialize()
 	{
-		shader.loadPreCopiled("../Debug/", "Color", true);
+		shader.loadPreCopiled("../Debug/", "PhongVert", true);
 		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
@@ -43,15 +43,22 @@ namespace Sandbox
 		e1.mMesh = ResourceManager::loadMesh("cube", "../models/cube.obj");
 		e1.mPosition.z = -5;
 
-		lightData.lights[0].direction = glm::vec4(-0.7f, -0.7f, 0, 0);
-		lightData.lights[0].ambient = glm::vec4(1, 0, 0, 1);
-		lightData.lights[0].diffuse = glm::vec4(1, 0, 0, 1);
 		
-		lightData.lights[1].direction = glm::vec4(0.7f, 0, 0.7f, 0);
-		lightData.lights[1].ambient = glm::vec4(0, 0, 1, 1);
-		lightData.lights[1].diffuse = glm::vec4(0, 0, 1, 1);
+		lightData.numLights = 1;
+		lightData.globalAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
+		lightData.falloff = 1;
+		lightData.fogColor = glm::vec3(0.0f, 0.2f, 0.4f);
+		lightData.attCoeffs = glm::vec3(1, 0.1, 0);
 
-		lightData.numLights = 2;
+		for (int i = 0; i < lightData.numLights; ++i)
+		{
+			lightData.lights[i].ambient = glm::vec4(0,0,0,0);
+			lightData.lights[i].diffuse = glm::vec4(0.8, 0.8, 0.8, 1);
+			lightData.lights[i].specular = glm::vec4(1,1,1,1);
+			lightData.lights[i].direction = glm::vec4(0, 0, -1, 0);
+			lightData.lights[i].position = glm::vec4(0, 0, 0, 0);
+			lightData.lights[i].type = 1;
+		}
 	}
 
 	void update()
@@ -82,6 +89,7 @@ namespace Sandbox
 		{
 			ImGui::ColorEdit3("Ambient", &e1.mMaterial.ambient[0]);
 			ImGui::ColorEdit3("Diffuse", &e1.mMaterial.diffuse[0]);
+			ImGui::ColorEdit3("Specular", &e1.mMaterial.specular[0]);
 		}
 
 		ImGui::Separator();
@@ -101,7 +109,7 @@ namespace Sandbox
 			}
 			ImGui::PopID();
 		}
-
+		
 		static int check;
 		char *choices[] =
 		{

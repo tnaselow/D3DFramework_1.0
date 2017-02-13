@@ -66,7 +66,6 @@ class Renderer_D3D
 		static void makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data = nullptr);
 		static void mapCBuffer(BufferTypes buffer, size_t size, const void *data, unsigned bindType, int bindRegister = -1);
 
-		static ID3D11Buffer			  *mProjBuffer;
 		static ID3D11RasterizerState  *mRasterState;
 	private:
 		static std::vector<EntityShader> mEntities;
@@ -80,13 +79,6 @@ class Renderer_D3D
 		static ID3D11Texture2D		  *mBackBuffTexture;
 		static ID3D11Texture2D		  *mDepthStencilTexture;
 		static ID3D11Debug			  *mDebugInterface;
-
-		//static ID3D11Buffer			  *mModelBuffer;
-		//
-		//static ID3D11Buffer			  *mLightBuffer;
-		//static ID3D11Buffer			  *mMaterialBuffer;	
-		//
-		static ID3D11Buffer			  *mNormalTypeBuffer;
 
 		static std::vector<ID3D11Buffer *> mC_Buffers;
 
