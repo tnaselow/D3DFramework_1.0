@@ -63,17 +63,28 @@ cbuffer MATERIAL_BUFFER : register(b3)
 
 float3 calcAmbient(Light light)
 {
-	return mul(light.ambient, material.ambient);
+	return light.ambient * material.ambient;
 }
 
 float3 calcDiffuse(Light light, float3 N, float3 L)
 {
-	return mul(mul(light.diffuse, max(dot(N, L), 0.0)), material.diffuse);
+	return light.diffuse * max(dot(N, L), 0.0) * material.diffuse;
 }
 
 float3 calcSpecular(Light light, float3 V, float3 R)
 {
-	return mul(mul(light.specular, pow(max(dot(V, R), 0.0f), falloff)), material.specular);
+	// specular power set to 1 for lack of texture
+	return light.specular * pow(max(dot(V, R), 0.0f), 1.0) * material.specular;
+}
+
+float calcSpotlightFactor(Light light, float3 worldPos)
+{
+	// direction of spotlight
+	float3 lightDir = normalize(-light.direction.xyz);
+	// direction from light to pixel
+	float3 dirToVert = normalize(light.position.xyz - worldPos);
+	float lDotd = dot(lightDir, dirToVert);
+	return (lDotd - cos(outerRadius)) / (cos(innerRadius) - cos(outerRadius));
 }
 
 float calcAttenuation(float distance)
@@ -83,38 +94,40 @@ float calcAttenuation(float distance)
 	float c3 = attCoeffs.z * distance * distance;
 	return min(1, 1.0 / (c1 + c2 + c3));
 }
-
-float zFar = 100;
-float zNear = 50;
-
 PS_IN main( VS_IN IN ) 
 {
 	PS_IN OUT;
 	OUT.position = mul(Projection, mul(Model, IN.position));
 
-	float3 N = normalize(IN.normal.xyz);
+	float zFar = 100;
+	float zNear = 50;
+
+	float3 worldPos = mul(Model, IN.position).xyz;
+	float3 worldNorm = mul(Model, IN.normal).xyz;
+
+	float3 N = normalize(worldNorm);
 
 	float3 color = float3(0, 0, 0);
 	for (int i = 0; i < numLights; ++i)
 	{
-		// calculate light vector and light distance
 		float3 L;
+		// calculate light vector and light distance
 		if (lights[i].type == 1)
 			L = -lights[i].direction.xyz;
 		else
-			L = lights[i].position.xyz - IN.position.xyz;
+			L = lights[i].position.xyz - worldPos;
 		
 		float distL = length(L);
 		L = normalize(L);
 
 
 		// calculate view vector and view distance
-		float3 V = camPosition.xyz - IN.position.xyz;
+		float3 V = camPosition.xyz - worldPos;
 		float distV = length(V);
 		V = normalize(V);
-
+		
 		// calculate the reflection vector
-		float3 R = mul((2 * dot(N, L)), N - L);
+		float3 R = (2 * dot(N, L) * N) - L;
 		R = normalize(R);
 
 		// calculate phong lighting
@@ -125,16 +138,25 @@ PS_IN main( VS_IN IN )
 
 		float3 tempColor = Ia + Id + Is;
 		// if it is not a directional light use attenuation
-		if (lights[i].type > 1)
-			tempColor *= att;
+		//if (lights[i].type > 1)
+		//	tempColor *= att;
+
+		float spotlightFactor = calcSpotlightFactor(lights[i], worldPos);
+		if (lights[i].type == 3)
+			tempColor *= spotlightFactor;
 
 		// calculate fog
-		float S = (zFar - distV) / (zFar - zNear);
-		tempColor = ((1 - S) * tempColor) + (S * fogColor);
+		float S = saturate( (zFar - distV) / (zFar - zNear) );
+		tempColor = ((1 - S) * fogColor) + (S * tempColor);
 
-		color += tempColor;
+		// compensate for dotp check
+		// zeros out color if facing the wrong way
+		float faceCheck = (dot(N, L) > 0 ? 1 : 0);
+
+		color += tempColor * faceCheck;
 	}
 
+	
 	OUT.color = float4(color, 1);
 	return OUT;
 }

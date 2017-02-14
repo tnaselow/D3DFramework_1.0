@@ -20,6 +20,8 @@ End Header --------------------------------------------------------*/
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 
+#define PI 3.14159265359f
+
 namespace
 {
 	Entity e1;
@@ -49,6 +51,8 @@ namespace Sandbox
 		lightData.falloff = 1;
 		lightData.fogColor = glm::vec3(0.0f, 0.2f, 0.4f);
 		lightData.attCoeffs = glm::vec3(1, 0.1, 0);
+		lightData.innerRadius = 15 * (PI / 180);
+		lightData.outerRadius = 30 * (PI / 180);
 
 		for (int i = 0; i < lightData.numLights; ++i)
 		{
@@ -57,7 +61,7 @@ namespace Sandbox
 			lightData.lights[i].specular = glm::vec4(1,1,1,1);
 			lightData.lights[i].direction = glm::vec4(0, 0, -1, 0);
 			lightData.lights[i].position = glm::vec4(0, 0, 0, 0);
-			lightData.lights[i].type = 1;
+			lightData.lights[i].type = 3;
 		}
 	}
 
@@ -106,10 +110,12 @@ namespace Sandbox
 				ImGui::InputFloat3("Direction", &lightData.lights[i].direction[0]);
 				ImGui::ColorEdit4("Ambient", &lightData.lights[i].ambient[0]);
 				ImGui::ColorEdit4("Diffuse", &lightData.lights[i].diffuse[0]);
+				ImGui::ColorEdit4("Specular", &lightData.lights[i].specular[0]);
 			}
 			ImGui::PopID();
 		}
 		
+		Renderer_D3D::mapCBuffer(BUFFER_MATERIAL, sizeof(Material), &e1.mMaterial, SHADER_VERTEX);
 		static int check;
 		char *choices[] =
 		{
