@@ -251,6 +251,9 @@
     <ClInclude Include="Framework\ResourceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Framework\Texture2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Color_VS.hlsl" />
@@ -258,5 +261,7 @@
     <FxCompile Include="Shaders\Color_G.hlsl" />
     <FxCompile Include="Shaders\PhongVert_VS.hlsl" />
     <FxCompile Include="Shaders\PhongVert_PS.hlsl" />
+    <FxCompile Include="Shaders\PhongPix_VS.hlsl" />
+    <FxCompile Include="Shaders\PhongPix_PS.hlsl" />
   </ItemGroup>
 </Project>

@@ -129,6 +129,7 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	makeCBuffer(BUFFER_LIGHTS, sizeof(LightBufferData), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_MATERIAL, sizeof(Material), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_NORMAL_TYPE, 16, USAGE_DYNAMIC);
+	makeCBuffer(BUFFER_COLOR, sizeof(glm::vec4), USAGE_DYNAMIC);
 }
 
 void Renderer_D3D::makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data)
@@ -189,12 +190,12 @@ void Renderer_D3D::setNormalDrawtype(unsigned type)
 
 void Renderer_D3D::DrawEntity(Entity &entity, Shader &shader)
 {
-	mEntities.emplace_back(&entity, &shader);
+	mEntities.emplace_back(entity, &shader);
 }
 
 void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 {
-	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_VERTEX);
+	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
 }
 
 void Renderer_D3D::EndFrame()
@@ -205,52 +206,35 @@ void Renderer_D3D::EndFrame()
 	UINT offset = 0;
 	
 	// loop twice for normals and geometry
-	for(int j = 0; j < 2; j++)
 	for(unsigned i = 0; i < mEntities.size(); ++i)
 	{
-		if(j == 0 )
-			mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
-		else if(j == 1)
-			mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL | SHADER_GEOMETRY);
+		mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
 
 
 		
-		glm::mat4x4 model = glm::translate(mEntities[i].mEntity->mPosition) *
-							glm::rotate(mEntities[i].mEntity->mRotation.z, glm::vec3(0, 0, 1)) *
-							glm::rotate(mEntities[i].mEntity->mRotation.y, glm::vec3(0, 1, 0)) *
-							glm::rotate(mEntities[i].mEntity->mRotation.x, glm::vec3(1, 0, 0)) * 
-							glm::scale(mEntities[i].mEntity->mScale);
+		glm::mat4x4 model = glm::translate(mEntities[i].mEntity.mPosition) *
+							glm::rotate(mEntities[i].mEntity.mRotation.z, glm::vec3(0, 0, 1)) *
+							glm::rotate(mEntities[i].mEntity.mRotation.y, glm::vec3(0, 1, 0)) *
+							glm::rotate(mEntities[i].mEntity.mRotation.x, glm::vec3(1, 0, 0)) * 
+							glm::scale(mEntities[i].mEntity.mScale);
 	
 		glm::mat4x4 normModel = model;
 		normModel  = glm::transpose(glm::inverse(normModel));
 		glm::mat4x4 models[] = { model, normModel };
-		
-		//D3D11_MAPPED_SUBRESOURCE map;
-		//ZeroMemory(&map, sizeof(map));
-		//HR(mDeviceContext->Map(mModelBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map));
-		//
-		//memcpy(map.pData, models, sizeof(models));
-		//mDeviceContext->Unmap(mModelBuffer, 0);
 
 		mapCBuffer(BUFFER_MODEL, sizeof(glm::mat4x4) * 2, models, SHADER_VERTEX);
-
-		//TODO: bind material and light buffers / do lighting calculations / draw normals 
-		//ZeroMemory(&map, sizeof(map));
-		//HR(mDeviceContext->Map(mMaterialBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map));
-		//memcpy(map.pData, &mEntities[i].mEntity->mMaterial, sizeof(mEntities[i].mEntity->mMaterial));
-		//mDeviceContext->Unmap(mMaterialBuffer, 0);
-		//mDeviceContext->PSSetConstantBuffers(1, 1, &mMaterialBuffer);
-		mapCBuffer(BUFFER_MATERIAL, sizeof(Material), &mEntities[i].mEntity->mMaterial, SHADER_PIXEL);
-
+		
+		mapCBuffer(BUFFER_MATERIAL, sizeof(Material), &mEntities[i].mEntity.mMaterial, SHADER_PIXEL);
+		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &mEntities[i].mEntity.mColor, SHADER_VERTEX);
 
 		//mDeviceContext->VSSetConstantBuffers(1, 1, &mModelBuffer);
 
-		mDeviceContext->IASetVertexBuffers(0, 1, &(mEntities[i].mEntity->mMesh->mVertBuffer), &stride, &offset);
-		mDeviceContext->IASetIndexBuffer(mEntities[i].mEntity->mMesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		mDeviceContext->IASetVertexBuffers(0, 1, &(mEntities[i].mEntity.mMesh->mVertBuffer), &stride, &offset);
+		mDeviceContext->IASetIndexBuffer(mEntities[i].mEntity.mMesh->mIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 		mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		mDeviceContext->DrawIndexed(mEntities[i].mEntity->mMesh->mIndices.size(), 0, 0);
+		mDeviceContext->DrawIndexed(mEntities[i].mEntity.mMesh->mIndices.size(), 0, 0);
 	}
 	mEntities.clear();
 	Shader::unBind();

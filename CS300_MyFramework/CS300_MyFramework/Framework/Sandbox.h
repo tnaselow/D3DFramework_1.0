@@ -11,6 +11,7 @@ Author: Trevor Naselow / t.naselow / id:180002215
 Creation date: 1/27/2017
 End Header --------------------------------------------------------*/
 #pragma once
+#define GLM_FORCE_SWIZZLE 
 #include "glm/glm.hpp"
 #include "Mesh.h"
 
@@ -40,11 +41,11 @@ struct LightBufferData
 
 	float innerRadius;
 	float outerRadius;
-	int falloff;
-	float allign_1;
+	float falloff;
+	float specIntesity;
 
 	glm::vec3 attCoeffs;
-	float allign_2;
+	int useBlinn;
 
 	glm::vec3 fogColor;
 	float allign_3;
@@ -63,10 +64,12 @@ struct Material
 
 struct Entity
 {
-	Entity() : mPosition(0,0,0), mRotation(0,0,0), mScale(1,1,1), mMesh(nullptr) {}
+	Entity() : mPosition(0,0,0), mRotation(0,0,0), mScale(1,1,1), mColor(1,1,1,1), mMesh(nullptr) {}
 	glm::vec3 mPosition;
 	glm::vec3 mRotation;
 	glm::vec3 mScale;
+
+	glm::vec4 mColor;
 
 	Material mMaterial;
 

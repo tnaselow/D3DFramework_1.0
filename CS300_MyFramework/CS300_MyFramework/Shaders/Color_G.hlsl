@@ -10,7 +10,15 @@ Project: t.naselow_CS300_3
 Author: Trevor Naselow / t.naselow / id:180002215
 Creation date: 1/27/2017
 End Header --------------------------------------------------------*/
-#include "Color_H.hlsl"
+//#include "Color_H.hlsl"
+
+struct VOut
+{
+	float4 position : SV_POSITION;
+	float3 normal : NORMAL;
+	float3 pixelPos : POSITION;
+	float4 color : COLOR;
+};
 
 cbuffer PROJECTION_BUFFER : register(b0)
 {

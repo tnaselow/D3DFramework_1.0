@@ -43,11 +43,11 @@ cbuffer LIGHT_BUFFER : register(b2)
 
 	float innerRadius;
 	float outerRadius;
-	int falloff;
+	float falloff;
 	float allign_1;
 	
 	float3 attCoeffs;
-	float allign_2;
+	int useBlinn;
 	
 	float3 fogColor;
 	float allign_3;
@@ -84,7 +84,7 @@ float calcSpotlightFactor(Light light, float3 worldPos)
 	// direction from light to pixel
 	float3 dirToVert = normalize(light.position.xyz - worldPos);
 	float lDotd = dot(lightDir, dirToVert);
-	return (lDotd - cos(outerRadius)) / (cos(innerRadius) - cos(outerRadius));
+	return pow((lDotd - cos(outerRadius)) / (cos(innerRadius) - cos(outerRadius)), falloff);
 }
 
 float calcAttenuation(float distance)
@@ -138,8 +138,8 @@ PS_IN main( VS_IN IN )
 
 		float3 tempColor = Ia + Id + Is;
 		// if it is not a directional light use attenuation
-		//if (lights[i].type > 1)
-		//	tempColor *= att;
+		if (lights[i].type > 1)
+			tempColor *= att;
 
 		float spotlightFactor = calcSpotlightFactor(lights[i], worldPos);
 		if (lights[i].type == 3)

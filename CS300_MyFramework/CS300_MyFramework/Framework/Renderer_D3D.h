@@ -35,13 +35,15 @@ enum BufferTypes
 	BUFFER_LIGHTS,
 	BUFFER_MATERIAL,
 	BUFFER_NORMAL_TYPE,
+	BUFFER_COLOR,
+
 	BUFFER_NUM_BUFFERS
 };
 
 struct EntityShader
 {
-	EntityShader(Entity *entity, Shader *shader) : mEntity(entity), mShader(shader) {}
-	Entity *mEntity;
+	EntityShader(Entity entity, Shader *shader) : mEntity(entity), mShader(shader) {}
+	Entity mEntity;
 	Shader *mShader;
 };
 

@@ -20,8 +20,6 @@ struct PixelOutput
 struct VOut
 {
 	float4 position : SV_POSITION;
-	float3 pixelPos : PIXPOS;
-	float3 normal : NORMAL;
 	float4 color : COLOR;
 };
 

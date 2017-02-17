@@ -23,19 +23,19 @@ cbuffer MODEL_BUFFER : register(b1)
 	float4x4 NormalModel;
 };
 
+cbuffer COLOR_BUFFER : register(b5)
+{
+	float4 color;
+}
 
-VOut main(float4 position : POSITION, float4 normal : NORMAL)
+
+VOut main(float4 position : POSITION, float4 normal: NORMAL)
 {
 	VOut output;
 
 	// calculate the perspective projected position
 	output.position = mul(Projection, mul(Model, position));
-	// calculate the world position of this vertex
-	output.pixelPos = mul(Model, position);
-	// set a color (depricated not used any more)
-	output.color = float4(1, 0, 0, 1);
-	// sets a world space transformed normal of this veretex
-	output.normal = mul(Model, normal).xyz;
-	
+	output.color = color;
+
 	return output;
 }
