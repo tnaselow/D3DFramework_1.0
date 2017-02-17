@@ -118,6 +118,7 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	vp.MaxDepth = 1;
 	mDeviceContext->RSSetViewports(1, &vp);
 	
+
 	// init GUI
 	GUI::Initialize(hwnd, mDevice, mDeviceContext);
 

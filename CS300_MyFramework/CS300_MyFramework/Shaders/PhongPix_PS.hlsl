@@ -1,5 +1,8 @@
 #include "PhongPix_H.hlsl"
 
+
+
+
 // DEFINES
 struct Light
 {
@@ -20,6 +23,15 @@ struct Material
 	float4 ambient;
 	float4 diffuse;
 	float4 specular;
+};
+
+Texture2D diffuseTexture : register(t0);
+
+SamplerState textureSampler 
+{
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
 };
 
 // BUFFERS
@@ -58,6 +70,7 @@ float3 calcAmbient(Light light)
 
 float3 calcDiffuse(Light light, float3 N, float3 L)
 {
+	//return light.diffuse * diffuseTexture.Sample(textureSampler, N.xy) * max(dot(N, L), 0);
 	return light.diffuse * material.diffuse * max(dot(N, L), 0);
 }
 
@@ -159,5 +172,6 @@ float4 main(PS_IN IN) : SV_TARGET
 	}
 
 
+	return diffuseTexture.Sample(textureSampler, IN.uvCoords);
 	return float4(color, 1);
 }

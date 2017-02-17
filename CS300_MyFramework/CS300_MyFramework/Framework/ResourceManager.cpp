@@ -14,10 +14,78 @@ End Header --------------------------------------------------------*/
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include "Utils.h"
+#include <iostream>
+#include "Renderer_D3D.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 std::map<std::string, Mesh> ResourceManager::mMeshes;
 std::map<std::string, Shader> ResourceManager::mShaders;
+std::map<std::string, Texture2D> ResourceManager::m_Textures;
 
+Texture2D *ResourceManager::loadTexture(std::string name, std::string dir, std::string extension)
+{
+	auto iter = m_Textures.find(name);
+	if (iter != m_Textures.end())
+		return &m_Textures[name];
+
+	// loading texture data
+	int width, height;
+	// maybe do something with this
+	int numChannels;
+	unsigned char *image = stbi_load((dir+name+extension).c_str(), &width, &height, &numChannels, 0);
+
+	if (image == nullptr)
+		std::cout << "couldnt load image " + name << std::endl;
+
+	// setting up d3d texture
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvd;
+	srvd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvd.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvd.Texture2D.MipLevels = 1;
+	srvd.Texture2D.MostDetailedMip = 0;
+
+	D3D11_SUBRESOURCE_DATA data;
+	ZeroMemory(&data, sizeof(data));
+	data.pSysMem = image;
+	data.SysMemPitch = width * numChannels; // stride of texture
+
+	ID3D11Texture2D *texture;
+	HR(Renderer_D3D::getDevice()->CreateTexture2D(&textureDesc, &data, &texture));
+	HR(Renderer_D3D::getDevice()->CreateShaderResourceView(texture, &srvd, &m_Textures[name].m_SRV));
+
+	m_Textures[name].m_Height = height;
+	m_Textures[name].m_Width = width;
+	m_Textures[name].m_Name = name;
+	
+	SafeRelease(texture);
+	stbi_image_free(image);
+
+	return &m_Textures[name];
+}
+
+Texture2D *ResourceManager::getTexture(std::string name)
+{
+	auto iter = m_Textures.find(name);
+	assert(iter != m_Textures.end());
+	return &m_Textures[name];
+	
+}
 
 Shader *ResourceManager::loadShader(std::string name, std::string dir)
 {
@@ -157,4 +225,12 @@ Mesh *ResourceManager::getMesh(std::string name)
 	assert(it != mMeshes.end());
 
 	return &mMeshes[name];
+}
+
+void ResourceManager::cleanup()
+{
+	// TODO : in the next iteration of the engine have the resource manager
+	// responsible for cleaning up all assets and not the assets cleaning themselves up
+	for (auto tex : m_Textures)
+		SafeRelease(tex.second.m_SRV);
 }

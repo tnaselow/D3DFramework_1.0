@@ -13,6 +13,7 @@ End Header --------------------------------------------------------*/
 #pragma once
 #include "Mesh.h"
 #include <map>
+#include "Texture2D.h"
 
 class ResourceManager
 {
@@ -23,8 +24,15 @@ class ResourceManager
 		
 		static Shader *loadShader(std::string name, std::string dir);
 		static Shader *getShader(std::string name);
+
+		static Texture2D *loadTexture(std::string name, std::string dir, std::string extension = ".png");
+		static Texture2D *getTexture(std::string name);
+
+		static void cleanup();
+
 	private:
 		static std::map<std::string, Mesh> mMeshes;
 		static std::map<std::string, Shader> mShaders;
+		static std::map<std::string, Texture2D> m_Textures;
 		ResourceManager() {}
 };

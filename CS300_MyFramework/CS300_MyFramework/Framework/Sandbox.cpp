@@ -42,6 +42,8 @@ namespace Sandbox
 	{
 		shader.loadPreCopiled("../Debug/", "PhongPix", true);
 		colorShader.loadPreCopiled("../Debug/", "Color");
+		Texture2D *tex = ResourceManager::loadTexture("image", "../textures/");
+		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
 		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
