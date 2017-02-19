@@ -21,6 +21,7 @@ End Header --------------------------------------------------------*/
 #include "ResourceManager.h"
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
+#include <ctime>
 
 #define PI 3.14159265359f
 
@@ -30,6 +31,8 @@ namespace
 	Entity eFloor;
 	Shader shader;
 	Shader colorShader;
+
+	bool rotating = true;
 
 	LightBufferData lightData;
 
@@ -51,6 +54,9 @@ namespace Sandbox
 	
 		e1.mMesh = ResourceManager::loadMesh("sword", "../models/sword.obj");
 		e1.mPosition.z = -5;
+		e1.mPosition.y = -2;
+		e1.mMaterial.diffuse = glm::vec4(0.25f, 0.25f, 0.25f, 1);
+		e1.mMaterial.specular = glm::vec4(0.25f, 0.25f, 0.25f, 1);
 
 		eFloor.mMesh = ResourceManager::loadMesh("cube", "../models/cube.obj");
 		eFloor.mPosition.z = -14;
@@ -58,7 +64,7 @@ namespace Sandbox
 		eFloor.mScale = glm::vec3(20, 20, 20);
 
 		
-		lightData.numLights = 2;
+		lightData.numLights = 8;
 		lightData.globalAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
 		lightData.falloff = 1;
 		lightData.specIntesity = 1;
@@ -66,23 +72,50 @@ namespace Sandbox
 		lightData.attCoeffs = glm::vec3(1, 0.1, 0);
 		lightData.innerRadius = 15 * (PI / 180);
 		lightData.outerRadius = 30 * (PI / 180);
+		lightData.useTexture = false;
 
 		for (int i = 0; i < lightData.numLights; ++i)
 		{
+			float r, g, b;
+			r = ((rand() % 100) + 1) / 100.0f;
+			g = ((rand() % 100) + 1) / 100.0f;
+			b = ((rand() % 100) + 1) / 100.0f;
+			float radius = 3;
+			float angle = ((i + 1.0f) / lightData.numLights) * 2 * PI;
+
 			lightData.lights[i].ambient = glm::vec4(0,0,0,0);
-			lightData.lights[i].diffuse = glm::vec4(0.8, 0.8, 0.8, 1);
+			lightData.lights[i].diffuse = glm::vec4(r, g, b, 1);
 			lightData.lights[i].specular = glm::vec4(1,1,1,1);
 			lightData.lights[i].direction = glm::vec4(0, 0, -1, 0);
-			lightData.lights[i].position = glm::vec4(0, 0, 0, 0);
-			lightData.lights[i].type = 3;
+			lightData.lights[i].position = glm::vec4(cos(angle) * radius, 0, sin(angle) * radius - 5, 0);
+			lightData.lights[i].type = 2;
 		}
 
-		lightData.lights[1].type = 2;
-		lightData.lights[1].position = glm::vec4(5, 5, -5, 1);
 	}
 
 	void update()
 	{
+
+		static float timer = 0;
+		timer = clock() * 0.001f;
+
+		if(rotating)
+		{
+			for (int i = 0; i < lightData.numLights; ++i)
+			{
+				float radius = 3;
+
+				float angle = ((i + 1.0f) / lightData.numLights) * 2 * PI;
+
+				lightData.lights[i].position = glm::vec4(cos(angle + timer) * radius, 0, sin(angle + timer) * radius - 5, 0);
+				lightData.lights[i].direction = glm::normalize( glm::vec4(e1.mPosition.xyz, 1) - lightData.lights[i].position);
+			}
+			
+			e1.mRotation.x += timer * 0.001f;
+			e1.mRotation.z += timer * 0.001f;
+		}
+
+
 		ImGui_ImplDX11_NewFrame();
 
 		ImGui::Begin("CS300_Framework");
@@ -96,6 +129,10 @@ namespace Sandbox
 		ImGui::Separator();
 
 		ImGui::Checkbox("Blinn", reinterpret_cast<bool *>(&lightData.useBlinn));
+		ImGui::Checkbox("Rotating", &rotating);
+		ImGui::Checkbox("UseTexture", reinterpret_cast<bool *>(&lightData.useTexture));
+
+		ImGui::InputInt("Num Lights", &lightData.numLights);
 		
 		ImGui::SliderFloat3("Rotation", &e1.mRotation[0], 0, 6.28f); 
 		static float scale = 1;

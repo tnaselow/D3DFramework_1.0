@@ -23,7 +23,7 @@ struct Vertex
 {
 	glm::vec4 Position; // only use vec3
 	glm::vec4 Normal;   // only use vec3
-	//XMFLOAT2 TexCoords;
+	glm::vec4 texCoords; 
 };
 
 struct Face

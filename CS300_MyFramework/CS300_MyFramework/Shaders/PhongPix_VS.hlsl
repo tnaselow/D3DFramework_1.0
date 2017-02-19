@@ -19,9 +19,10 @@ PS_IN main( VS_IN IN)
 	OUT.position = mul(Projection, worldpos);
 	OUT.worldPosition = worldpos;
 	OUT.worldNormal = mul(Model, IN.normal).xyz;
+
 	float r = length(IN.position);
-	float temp = (atan(IN.position.z / IN.position.x) + (3.141596265358 / 2)) / (3.141596265358);
-	float temp2 = (atan(IN.position.y / r) + (3.141596265358 / 2)) / (3.141596265358);
+	float temp = (atan(IN.position.z / IN.position.x) + (PI / 2)) / (PI);
+	float temp2 = (atan(IN.position.y / r) + (PI / 2)) / (PI);
 	OUT.uvCoords = float2(temp, temp2);
 
 	return OUT;

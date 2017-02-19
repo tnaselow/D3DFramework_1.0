@@ -1,8 +1,6 @@
 #include "PhongPix_H.hlsl"
 
 
-
-
 // DEFINES
 struct Light
 {
@@ -51,7 +49,7 @@ cbuffer LIGHT_BUFFER : register(b2)
 	int useBlinn;
 
 	float3 fogColor;
-	float allign_3;
+	int useTexture;
 
 	float3 camPosition;
 	float allign_4;
@@ -68,10 +66,12 @@ float3 calcAmbient(Light light)
 	return light.ambient * material.ambient;
 }
 
-float3 calcDiffuse(Light light, float3 N, float3 L)
+float3 calcDiffuse(Light light, float3 N, float3 L, float2 uvs)
 {
-	//return light.diffuse * diffuseTexture.Sample(textureSampler, N.xy) * max(dot(N, L), 0);
-	return light.diffuse * material.diffuse * max(dot(N, L), 0);
+	if(useTexture)
+		return light.diffuse * diffuseTexture.Sample(textureSampler, uvs) * max(dot(N, L), 0);
+	else
+		return light.diffuse * material.diffuse * max(dot(N, L), 0);
 }
 
 float3 calcSpecularBlinn(Light light, float3 N, float3 L, float3 V)
@@ -139,7 +139,7 @@ float4 main(PS_IN IN) : SV_TARGET
 		R = normalize(R);
 
 		float3 Ia = calcAmbient(lights[i]);
-		float3 Id = calcDiffuse(lights[i], N, L);
+		float3 Id = calcDiffuse(lights[i], N, L, IN.uvCoords);
 		float3 Is;
 		if(useBlinn)
 			Is = calcSpecularBlinn(lights[i], N, L, V);
@@ -172,6 +172,6 @@ float4 main(PS_IN IN) : SV_TARGET
 	}
 
 
-	return diffuseTexture.Sample(textureSampler, IN.uvCoords);
+	//return diffuseTexture.Sample(textureSampler, IN.uvCoords);
 	return float4(color, 1);
 }

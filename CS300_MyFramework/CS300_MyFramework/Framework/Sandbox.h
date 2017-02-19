@@ -48,7 +48,7 @@ struct LightBufferData
 	int useBlinn;
 
 	glm::vec3 fogColor;
-	float allign_3;
+	int useTexture;
 
 	glm::vec3 camPosition;
 	float allign_4;
