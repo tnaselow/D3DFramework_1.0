@@ -111,8 +111,8 @@ namespace Sandbox
 				lightData.lights[i].direction = glm::normalize( glm::vec4(e1.mPosition.xyz, 1) - lightData.lights[i].position);
 			}
 			
-			e1.mRotation.x += timer * 0.001f;
-			e1.mRotation.z += timer * 0.001f;
+			e1.mRotation.x += 0.001f;
+			e1.mRotation.z += 0.001f;
 		}
 
 
