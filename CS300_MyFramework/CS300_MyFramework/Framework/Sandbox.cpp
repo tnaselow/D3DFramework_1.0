@@ -22,6 +22,7 @@ End Header --------------------------------------------------------*/
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include <ctime>
+#include "AssimpLoader.h"
 
 #define PI 3.14159265359f
 
@@ -49,6 +50,10 @@ namespace Sandbox
 		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
 		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
+		
+		AssimpEntity aEntity;
+		loadModel(aEntity.m_Model, "../models/nanosuit/nanosuit.obj");
+
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
 		Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mRasterState);
 	

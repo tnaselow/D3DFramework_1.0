@@ -19,6 +19,7 @@ End Header --------------------------------------------------------*/
 #include "Sandbox.h"
 #include "Shader.h"
 
+struct AssimpModel;
 class Mesh;
 class Shader;
 
@@ -55,7 +56,10 @@ class Renderer_D3D
 		static void CleanUp();
 
 		static void DrawEntity(Entity &entity, Shader &shader);
+		static void DrawModel(AssimpModel &model, Shader &shader);
+	
 		static void EndFrame();
+		static void EndFrameDeffered();
 
 		static ID3D11Device	*getDevice() { return mDevice; }
 		static ID3D11DeviceContext *getDevContext() { return mDeviceContext; }

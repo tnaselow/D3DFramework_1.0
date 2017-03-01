@@ -51,6 +51,9 @@
     <ClCompile Include="Framework\ResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Framework\AssimpLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImGUI\stb_truetype.h">
@@ -254,6 +257,9 @@
     <ClInclude Include="Framework\Texture2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Framework\AssimpLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\Color_VS.hlsl" />
@@ -263,5 +269,7 @@
     <FxCompile Include="Shaders\PhongVert_PS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_VS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_PS.hlsl" />
+    <FxCompile Include="Shaders\DeferredG_VS.hlsl" />
+    <FxCompile Include="Shaders\DeferredG_PS.hlsl" />
   </ItemGroup>
 </Project>

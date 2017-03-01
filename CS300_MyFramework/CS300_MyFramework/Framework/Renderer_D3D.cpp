@@ -199,6 +199,8 @@ void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
 }
 
+
+
 void Renderer_D3D::EndFrame()
 {
 	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));

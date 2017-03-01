@@ -14,6 +14,7 @@ End Header --------------------------------------------------------*/
 #define GLM_FORCE_SWIZZLE 
 #include "glm/glm.hpp"
 #include "Mesh.h"
+#include "AssimpLoader.h"
 
 struct Light
 {
@@ -74,6 +75,15 @@ struct Entity
 	Material mMaterial;
 
 	Mesh *mMesh;
+};
+
+struct AssimpEntity
+{
+	glm::vec3 m_Position;
+	glm::vec3 m_Rotation;
+	glm::vec3 m_Scale;
+	
+	AssimpModel m_Model;
 };
 
 namespace Sandbox
