@@ -88,6 +88,10 @@ class Renderer_D3D
 
 		static ID3D11ShaderResourceView *m_WrapTextureView;
 
+		
+
+		static ID3D11SamplerState *m_LinearSampler;
+
 		static std::vector<ID3D11Buffer *> mC_Buffers;
 
 		Renderer_D3D();

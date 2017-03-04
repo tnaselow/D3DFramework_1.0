@@ -14,6 +14,7 @@ End Header --------------------------------------------------------*/
 #include "Mesh.h"
 #include <map>
 #include "Texture2D.h"
+#include "assimp/scene.h"
 
 class ResourceManager
 {
@@ -26,7 +27,10 @@ class ResourceManager
 		static Shader *getShader(std::string name);
 
 		static Texture2D *loadTexture(std::string name, std::string dir, std::string extension = ".png");
+		static Texture2D *loadTexture(std::string name, std::string dir, aiMaterial *mat, aiTextureType type);
 		static Texture2D *getTexture(std::string name);
+
+		static Texture2D *createTexture(std::string name, bool rtv, bool srv, unsigned width, unsigned height, char *data = nullptr, bool dsv = false);
 
 		static void cleanup();
 

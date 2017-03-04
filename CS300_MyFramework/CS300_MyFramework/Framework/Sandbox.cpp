@@ -32,18 +32,21 @@ namespace
 	Entity eFloor;
 	Shader shader;
 	Shader colorShader;
+	Shader defShader;
 
 	bool rotating = true;
 
 	LightBufferData lightData;
 
 	ID3D11Buffer *ProjectionBuffer;
+	AssimpEntity aEntity;
 }
 
 namespace Sandbox
 {
 	void initialize()
 	{
+		defShader.loadPreCopiled("../Debug/", "DeferredG");
 		shader.loadPreCopiled("../Debug/", "PhongPix", true);
 		colorShader.loadPreCopiled("../Debug/", "Color");
 		Texture2D *tex = ResourceManager::loadTexture("image", "../textures/");
@@ -51,8 +54,8 @@ namespace Sandbox
 		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		
-		AssimpEntity aEntity;
 		loadModel(aEntity.m_Model, "../models/nanosuit/nanosuit.obj");
+		//loadModel(aEntity.m_Model, "../models/Vegeta/Vegeta.obj");
 
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
 		Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mRasterState);
@@ -192,6 +195,8 @@ namespace Sandbox
 		Renderer_D3D::DrawEntity(e1, shader);
 		Renderer_D3D::DrawEntity(eFloor, shader);
 
-		Renderer_D3D::EndFrame();
+		Renderer_D3D::DrawModel(aEntity.m_Model, defShader);
+		Renderer_D3D::EndFrameDeffered();
+		//Renderer_D3D::EndFrame();
 	}
 }

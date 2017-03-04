@@ -1,4 +1,7 @@
 #pragma once
+
+
+#include "assimp/config.h"
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
@@ -10,7 +13,7 @@ class AssimpMesh;
 class AssimpModel;
 
 void processNode(AssimpModel &model, aiNode* node, const aiScene* scene);
-AssimpMesh processMesh(aiMesh* mesh, const aiScene* scene);
+AssimpMesh processMesh(aiMesh* mesh, const aiScene* scene, std::string dir);
 
 void setupMesh(AssimpMesh &mesh);
 void loadModel(AssimpModel &model, std::string file);
@@ -26,13 +29,13 @@ struct AssimpMesh
 {
 	std::vector<AssimpVert> m_Vertices;
 	std::vector<uint32_t> m_Indices;
-	std::vector<Texture2D> m_Textures;
+	std::vector<Texture2D *> m_Textures;
 
 	ID3D11Buffer *m_VertBuffer;
 	ID3D11Buffer *m_IndexBuffer;
 	
 	AssimpMesh(){}
-	AssimpMesh(const std::vector<AssimpVert> &verts, const std::vector<uint32_t> &indices, const std::vector<Texture2D> textures) :
+	AssimpMesh(const std::vector<AssimpVert> &verts, const std::vector<uint32_t> &indices, const std::vector<Texture2D *> textures) :
 				m_Vertices(verts), m_Indices(indices), m_Textures(textures)
 	{
 		setupMesh(*this);

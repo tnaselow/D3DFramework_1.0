@@ -1,6 +1,18 @@
 #include "DeferredG_H.hlsl"
 
-float4 main(VOut IN) : SV_TARGET
+Texture2D diffuseTexture : register(t0);
+Texture2D specularTexture : register(t1);
+
+SamplerState textureSampler : register(s0);
+
+PS_OUT main(VOut IN) 
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	PS_OUT OUT;
+
+	OUT.color = diffuseTexture.Sample(textureSampler, IN.texCoord);
+	OUT.specular = specularTexture.Sample(textureSampler, IN.texCoord);
+	OUT.normal = float4(IN.normal, 0);
+	OUT.position = float4(IN.worldPos, 1);
+	
+	return OUT;
 }

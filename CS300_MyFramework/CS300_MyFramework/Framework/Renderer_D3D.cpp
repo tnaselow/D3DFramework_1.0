@@ -18,6 +18,7 @@ End Header --------------------------------------------------------*/
 #include "Sandbox.h"
 #include "glm/gtx/transform.hpp"
 #include <iostream>
+#include "ResourceManager.h"
 
 ID3D11Device		*Renderer_D3D::mDevice;
 ID3D11DeviceContext *Renderer_D3D::mDeviceContext;
@@ -32,8 +33,7 @@ ID3D11RasterizerState *Renderer_D3D::mRasterState;
 std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 
 std::vector<EntityShader>    Renderer_D3D::mEntities;
-
-
+ID3D11SamplerState *         Renderer_D3D::m_LinearSampler;
 
 
 void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
@@ -131,6 +131,22 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	makeCBuffer(BUFFER_MATERIAL, sizeof(Material), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_NORMAL_TYPE, 16, USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_COLOR, sizeof(glm::vec4), USAGE_DYNAMIC);
+
+	D3D11_SAMPLER_DESC samplerDesc;
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+
+	HR(mDevice->CreateSamplerState(&samplerDesc, &m_LinearSampler));
+
+	ResourceManager::createTexture("colorBuffer", true, true, 800, 600);
+	ResourceManager::createTexture("positionBuffer", true, true, 800, 600);
+	ResourceManager::createTexture("normalBuffer", true, true, 800, 600);
+	ResourceManager::createTexture("specularBuffer", true, true, 800, 600);
+	//ResourceManager::createTexture("gBufferDepth", false, false, 800, 600, nullptr, true);
+	
 }
 
 void Renderer_D3D::makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data)
@@ -194,12 +210,79 @@ void Renderer_D3D::DrawEntity(Entity &entity, Shader &shader)
 	mEntities.emplace_back(entity, &shader);
 }
 
+Shader *_Shader;
+AssimpModel *_Model;
+void Renderer_D3D::DrawModel(AssimpModel& model, Shader& shader)
+{
+	_Shader = &shader;
+	_Model = &model;
+}
+
 void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 {
 	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
 }
+	
+
+void Renderer_D3D::EndFrameDeffered()
+{
+	mDeviceContext->PSSetSamplers(0, 1, &m_LinearSampler);
+
+	mDeviceContext->ClearRenderTargetView(ResourceManager::getTexture("colorBuffer")->m_RTV,   D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearRenderTargetView(ResourceManager::getTexture("positionBuffer")->m_RTV,D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearRenderTargetView(ResourceManager::getTexture("normalBuffer")->m_RTV,  D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearRenderTargetView(ResourceManager::getTexture("specularBuffer")->m_RTV, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearDepthStencilView(mRTV_DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
+	UINT stride = sizeof(AssimpVert);
+	UINT offset = 0;
+
+	//mEntities[0].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
+	_Shader->Bind(SHADER_VERTEX | SHADER_PIXEL);
 
 
+	glm::mat4x4 model = glm::translate(glm::vec3(0,0,-5)) *
+		//glm::rotate(mEntities[0].mEntity.mRotation.z, glm::vec3(0, 0, 1)) *
+		//glm::rotate(mEntities[0].mEntity.mRotation.y, glm::vec3(0, 1, 0)) *
+		//glm::rotate(mEntities[0].mEntity.mRotation.x, glm::vec3(1, 0, 0)) *
+		glm::scale(glm::vec3(1,1,1));
+
+	glm::mat4x4 normModel = model;
+	normModel = glm::transpose(glm::inverse(normModel));
+	glm::mat4x4 models[] = { model, normModel };
+
+	// bind g-buffer
+	ID3D11RenderTargetView *g_buffer[] = {
+		ResourceManager::getTexture("colorBuffer")->m_RTV,
+		ResourceManager::getTexture("positionBuffer")->m_RTV,
+		ResourceManager::getTexture("normalBuffer")->m_RTV,
+		ResourceManager::getTexture("specularBuffer")->m_RTV
+	};
+
+	mDeviceContext->OMSetRenderTargets(4, g_buffer, nullptr);
+
+	mapCBuffer(BUFFER_MODEL, sizeof(glm::mat4x4) * 2, models, SHADER_VERTEX);
+	for(unsigned i = 0; i < _Model->m_Meshes.size(); ++i)
+	{	
+		if(_Model->m_Meshes[i].m_Textures[0])
+			mDeviceContext->PSSetShaderResources(0, 1, &_Model->m_Meshes[i].m_Textures[0]->m_SRV);
+		if (_Model->m_Meshes[i].m_Textures[1])
+			mDeviceContext->PSSetShaderResources(1, 1, &_Model->m_Meshes[i].m_Textures[1]->m_SRV);
+		mDeviceContext->IASetVertexBuffers(0, 1, &_Model->m_Meshes[i].m_VertBuffer, &stride, &offset);
+		mDeviceContext->IASetIndexBuffer(_Model->m_Meshes[i].m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+		mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		mDeviceContext->DrawIndexed(_Model->m_Meshes[i].m_Indices.size(), 0, 0);
+	}
+
+	mEntities.clear();
+	Shader::unBind();
+
+	GUI::UpdateAndDraw();
+	mSwapChain->Present(0, 0);
+
+}
 
 void Renderer_D3D::EndFrame()
 {

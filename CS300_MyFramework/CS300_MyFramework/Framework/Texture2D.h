@@ -20,5 +20,7 @@ struct Texture2D
 {
 	int m_Width, m_Height;
 	std::string m_Name;
-	ID3D11ShaderResourceView *m_SRV;
+	ID3D11ShaderResourceView *m_SRV = nullptr;
+	ID3D11RenderTargetView   *m_RTV = nullptr;
+	ID3D11DepthStencilView   *m_DSV = nullptr;
 };

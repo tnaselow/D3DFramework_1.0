@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "Renderer_D3D.h"
 #include <iostream>
+#include "ResourceManager.h"
 
 void setupMesh(AssimpMesh &mesh)
 {
@@ -36,8 +37,10 @@ void setupMesh(AssimpMesh &mesh)
 
 void loadModel(AssimpModel &model, std::string file)
 {
+	
 	Assimp::Importer importer;
-	const aiScene *scene = importer.ReadFile(file.c_str(), aiProcess_Triangulate);
+	importer.SetPropertyInteger(AI_CONFIG_PP_PTV_NORMALIZE, 1);
+	const aiScene *scene = importer.ReadFile(file.c_str(), aiProcess_Triangulate | aiProcess_PreTransformVertices);
 
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -55,28 +58,34 @@ void processNode(AssimpModel &model, aiNode* node, const aiScene* scene)
 	for (unsigned i = 0; i < node->mNumMeshes; ++i)
 	{
 		aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-		model.m_Meshes.push_back(processMesh(mesh, scene));
+		model.m_Meshes.push_back(processMesh(mesh, scene, model.directory));
 	}
 	for(unsigned i = 0; i < node->mNumChildren; ++i)
 		processNode(model, node->mChildren[i], scene);
 }
 
-AssimpMesh processMesh(aiMesh* mesh, const aiScene* scene)
+AssimpMesh processMesh(aiMesh* mesh, const aiScene* scene, std::string dir)
 {
 	std::vector<AssimpVert> verts;
 	std::vector<uint32_t> inds;
-	std::vector<Texture2D> textures;
+	std::vector<Texture2D *> textures;
 
 	for(unsigned i = 0; i < mesh->mNumVertices; ++i)
 	{
 		AssimpVert vert;
 		glm::vec3 pos = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+		if (pos.y > 1)
+			std::cout << "to big";
 		glm::vec3 norm = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
 		glm::vec2 texCoord;
 		if (mesh->mTextureCoords[0])
 			texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 		else
 			texCoord = { 0,0 };
+
+		vert.m_Position = pos;
+		vert.m_Normal = norm;
+		vert.m_TexCoord = texCoord;
 
 		verts.push_back(vert);
 	}
@@ -88,10 +97,15 @@ AssimpMesh processMesh(aiMesh* mesh, const aiScene* scene)
 			inds.push_back(face.mIndices[j]);
 	}
 
+	textures.resize(3);
 	if(mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial *mat = scene->mMaterials[mesh->mMaterialIndex];
-		//Texture2D diffuseMaps = loadT
+		aiString name;
+		if(!mat->GetTexture(aiTextureType_DIFFUSE, 0, &name))
+			textures[0] = ResourceManager::loadTexture(name.C_Str(), dir+'/', mat, aiTextureType_DIFFUSE);
+		if(!mat->GetTexture(aiTextureType_SPECULAR, 0, &name))
+			textures[1] = ResourceManager::loadTexture(name.C_Str(), dir + '/', mat, aiTextureType_SPECULAR);
 	}
 
 	return AssimpMesh(verts, inds, textures);
