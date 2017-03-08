@@ -233,7 +233,7 @@ Texture2D *ResourceManager::createTexture(std::string name, bool rtv, bool srv, 
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // bad
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.MiscFlags = 0;
 
@@ -248,7 +248,7 @@ Texture2D *ResourceManager::createTexture(std::string name, bool rtv, bool srv, 
 	{
 		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
 		ZeroMemory(&rtvDesc, sizeof(rtvDesc));
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 
 		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 		HR(Renderer_D3D::getDevice()->CreateRenderTargetView(texture, &rtvDesc, &m_Textures[name].m_RTV));
 	}

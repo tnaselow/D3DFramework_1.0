@@ -253,6 +253,7 @@ void Renderer_D3D::EndFrameDeffered()
 
 	// bind g-buffer
 	ID3D11RenderTargetView *g_buffer[] = {
+		//mRTV_BackBuffer,
 		ResourceManager::getTexture("colorBuffer")->m_RTV,
 		ResourceManager::getTexture("positionBuffer")->m_RTV,
 		ResourceManager::getTexture("normalBuffer")->m_RTV,

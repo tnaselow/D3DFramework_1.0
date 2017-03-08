@@ -16,7 +16,7 @@ VOut main( float3 pos : POSITION, float3 normal : NORMAL, float2 texCoord : TEX_
 	VOut OUT;
 	OUT.worldPos = mul(Model, float4(pos,1)); 
 	OUT.position = mul(Projection, float4(OUT.worldPos, 1)); 
-	OUT.normal = mul(Model, float4(normal,1));
+	OUT.normal = mul(Model, float4(normal,0));
 	OUT.normal = normalize(OUT.normal);
 	OUT.texCoord = texCoord;
 	return OUT;

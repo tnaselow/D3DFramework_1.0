@@ -11,7 +11,7 @@ PS_OUT main(VOut IN)
 
 	OUT.color = diffuseTexture.Sample(textureSampler, IN.texCoord);
 	OUT.specular = specularTexture.Sample(textureSampler, IN.texCoord);
-	OUT.normal = float4(IN.normal, 0);
+	OUT.normal = float4(abs(IN.normal), 0);
 	OUT.position = float4(IN.worldPos, 1);
 	
 	return OUT;
