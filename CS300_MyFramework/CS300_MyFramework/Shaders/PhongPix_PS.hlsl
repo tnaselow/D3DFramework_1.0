@@ -36,6 +36,7 @@ struct Material
 };
 
 Texture2D diffuseTexture : register(t0);
+Texture2D normalMap : register(t1);
 
 SamplerState textureSampler 
 {
@@ -122,11 +123,21 @@ float calcSpotlightFactor(Light light, float3 worldPos)
 
 float4 main(PS_IN IN) : SV_TARGET
 {
+	float4x4 TBN;
+	TBN[0] = float4(IN.tangent, 0);
+	TBN[1] = float4(IN.biTangent, 0);
+	TBN[2] = float4(IN.worldNormal, 0);
+	TBN[3] = float4(0, 0, 0, 1);
+	transpose(TBN);
+	float3 N = normalMap.Sample(textureSampler, IN.uvCoords);
+	N = mul(float4(N, 0), TBN);
+	N = normalize(N);
+
 	float zFar = 100;
 	float zNear = 50;
 
-	float3 N = IN.worldNormal;
-	N = normalize(N);
+	//float3 N = IN.worldNormal;
+	//N = normalize(N);
 
 	float3 color = float3(0,0,0);
 	

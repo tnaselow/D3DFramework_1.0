@@ -31,6 +31,7 @@ void Shader::loadPreCopiled(const std::string &dir, const std::string &name, boo
 	loadShader(psPath, ShaderType::SHADER_PIXEL, true);
 	loadShader(gsPath, ShaderType::SHADER_GEOMETRY, true);
 	
+	
 	if (bind) Bind();
 }
 

@@ -18,6 +18,7 @@ End Header --------------------------------------------------------*/
 #include "Sandbox.h"
 #include "glm/gtx/transform.hpp"
 #include <iostream>
+#include "ResourceManager.h"
 
 ID3D11Device		*Renderer_D3D::mDevice;
 ID3D11DeviceContext *Renderer_D3D::mDeviceContext;
@@ -32,6 +33,7 @@ ID3D11RasterizerState *Renderer_D3D::mRasterState;
 std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 
 std::vector<EntityShader>    Renderer_D3D::mEntities;
+ID3D11Buffer           *Renderer_D3D::mLineBuffer;
 
 
 
@@ -122,6 +124,14 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	// init GUI
 	GUI::Initialize(hwnd, mDevice, mDeviceContext);
 
+	D3D11_BUFFER_DESC buffDesc;
+	ZeroMemory(&buffDesc, sizeof(buffDesc));
+	buffDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	buffDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	buffDesc.ByteWidth = sizeof(Vertex) * 20000;
+	buffDesc.Usage = D3D11_USAGE_DYNAMIC;
+	HR(mDevice->CreateBuffer(&buffDesc, nullptr, &mLineBuffer));
+
 	// init projection buffer
 	glm::mat4x4 projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
@@ -166,6 +176,7 @@ void Renderer_D3D::mapCBuffer(BufferTypes buffer, size_t size, const void *data,
 	if (bindRegister == -1)
 		bindRegister = buffer;
 	assert(bindRegister < 15);
+	assert(bindRegister < 15);
 
 	if(data != nullptr)
 	{
@@ -199,6 +210,36 @@ void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
 }
 
+void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh)
+{
+	std::vector<Vertex> lines;
+	for(unsigned i = 0;  i < mesh.mVertices.size(); ++i)
+	{
+		Vertex v1;
+		v1.Position = mesh.mVertices[i].Position;
+		lines.push_back(v1);
+		Vertex v2;
+		v2.Position = mesh.mVertices[i].Position + mesh.mVertices[i].Normal;
+		lines.push_back(v2);
+	}
+
+	int size = lines.size() * sizeof(Vertex);
+	D3D11_MAPPED_SUBRESOURCE map;
+	ZeroMemory(&map, sizeof(map));
+	HR(mDeviceContext->Map(mLineBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map));
+	memcpy(map.pData, lines.data(), lines.size() * sizeof(Vertex));
+	mDeviceContext->Unmap(mLineBuffer, 0);
+
+	unsigned offset = 0;
+	unsigned stride = sizeof(Vertex);
+
+	mDeviceContext->IASetVertexBuffers(0, 1, &mLineBuffer, &stride, &offset);
+
+	mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	mDeviceContext->Draw(lines.size(), 0);
+
+}
+
 void Renderer_D3D::EndFrame()
 {
 	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
@@ -206,13 +247,9 @@ void Renderer_D3D::EndFrame()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	
-	// loop twice for normals and geometry
 	for(unsigned i = 0; i < mEntities.size(); ++i)
 	{
-		mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
 
-
-		
 		glm::mat4x4 model = glm::translate(mEntities[i].mEntity.mPosition) *
 							glm::rotate(mEntities[i].mEntity.mRotation.z, glm::vec3(0, 0, 1)) *
 							glm::rotate(mEntities[i].mEntity.mRotation.y, glm::vec3(0, 1, 0)) *
@@ -227,6 +264,13 @@ void Renderer_D3D::EndFrame()
 		
 		mapCBuffer(BUFFER_MATERIAL, sizeof(Material), &mEntities[i].mEntity.mMaterial, SHADER_PIXEL);
 		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &mEntities[i].mEntity.mColor, SHADER_VERTEX);
+
+		// Draw tangents :)
+		//ResourceManager::getShader("Color")->Bind(SHADER_VERTEX | SHADER_PIXEL);
+		//renderTangentsBiTangents(*mEntities[i].mEntity.mMesh);
+
+		mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
+
 
 		//mDeviceContext->VSSetConstantBuffers(1, 1, &mModelBuffer);
 

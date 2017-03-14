@@ -30,8 +30,8 @@ namespace
 	Entity e1;
 	Entity eFloor;
 	Shader shader;
-	Shader colorShader;
 
+	Shader *colorShader;
 	bool rotating = true;
 
 	LightBufferData lightData;
@@ -44,13 +44,15 @@ namespace Sandbox
 	void initialize()
 	{
 		shader.loadPreCopiled("../Debug/", "PhongPix", true);
-		colorShader.loadPreCopiled("../Debug/", "Color");
-		Texture2D *tex = ResourceManager::loadTexture("image", "../textures/");
-		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
-		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
-		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
+		colorShader = ResourceManager::loadShader("Color", "../Debug/");
+		//colorShader.loadPreCopiled("../Debug/", "Color");
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
 		Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mRasterState);
+
+		Texture2D *tex = ResourceManager::loadTexture("metal_roof_diff_512x512", "../textures/", ".tga");
+		Texture2D *norm = ResourceManager::createNormalMap("metal_roof_spec_512x512", "../textures/", ".tga");
+		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
+		Renderer_D3D::getDevContext()->PSSetShaderResources(1, 1, &norm->m_SRV);
 	
 		e1.mMesh = ResourceManager::loadMesh("sword", "../models/sword.obj");
 		e1.mPosition.z = -5;
@@ -176,7 +178,7 @@ namespace Sandbox
 			lightBall.mScale = glm::vec3(0.25f, 0.25f, 0.25f);
 			lightBall.mColor = lightData.lights[i].diffuse;
 			lightBall.mMesh = ResourceManager::loadMesh("sphere", "../models/sphere.obj");
-			Renderer_D3D::DrawEntity(lightBall, colorShader);
+			Renderer_D3D::DrawEntity(lightBall, *colorShader);
 		}
 		
 		Renderer_D3D::setLightBuffer(lightData);

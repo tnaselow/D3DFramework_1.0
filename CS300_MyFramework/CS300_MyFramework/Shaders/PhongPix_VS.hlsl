@@ -27,15 +27,14 @@ cbuffer MODEL_BUFFER : register(b1)
 PS_IN main( VS_IN IN) 
 {
 	PS_IN OUT;
-	float4 worldpos = mul(Model, IN.position);
+	float4 worldpos = mul(Model, float4(IN.position, 1));
 	OUT.position = mul(Projection, worldpos);
 	OUT.worldPosition = worldpos;
-	OUT.worldNormal = mul(Model, IN.normal).xyz;
-
-	float r = length(IN.position);
-	float temp = (atan(IN.position.z / IN.position.x) + (PI / 2)) / (PI);
-	float temp2 = (atan(IN.position.y / r) + (PI / 2)) / (PI);
-	OUT.uvCoords = float2(temp, temp2);
+	OUT.worldNormal = mul(Model, float4(IN.normal, 0));
+	OUT.uvCoords = IN.texCoords;
+	
+	OUT.tangent = mul(Model, float4(IN.tangent, 0));
+	OUT.biTangent = mul(Model, float4(IN.biTangent, 0));
 
 	return OUT;
 }

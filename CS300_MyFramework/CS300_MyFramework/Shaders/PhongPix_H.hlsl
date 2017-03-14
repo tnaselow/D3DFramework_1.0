@@ -14,9 +14,17 @@ End Header --------------------------------------------------------*/
 
 struct VS_IN
 {
-	float4 position  : POSITION;
-	float4 normal    : NORMAL;
-	float4 texCoords : UV_COORDS; // only stored in xy not used in this assignment
+	//float4 position  : POSITION;
+	//float4 normal    : NORMAL;
+	//float4 texCoords : UV_COORDS; // only stored in xy not used in this assignment
+
+	float3 position : POSITION;
+	float3 normal : NORMAL;
+	float2 texCoords : UV_COORDS;
+	
+	float3 tangent : TANGENT;
+	float3 biTangent : BITANGENT;
+
 };
 
 struct PS_IN
@@ -25,4 +33,7 @@ struct PS_IN
 	float3 worldNormal : NORMAL;
 	float3 worldPosition : POSITION;
 	float2 uvCoords : UV_COORDS;
+
+	float3 tangent : TANGENT;
+	float3 biTangent : BITANGENT;
 };

@@ -29,12 +29,12 @@ cbuffer COLOR_BUFFER : register(b5)
 }
 
 
-VOut main(float4 position : POSITION, float4 normal: NORMAL)
+VOut main(VS_IN IN)
 {
 	VOut output;
 
 	// calculate the perspective projected position
-	output.position = mul(Projection, mul(Model, position));
+	output.position = mul(Projection, mul(Model, float4(IN.position, 1)));
 	output.color = color;
 
 	return output;

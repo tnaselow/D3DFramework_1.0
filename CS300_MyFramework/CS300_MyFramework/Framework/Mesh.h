@@ -21,14 +21,19 @@ End Header --------------------------------------------------------*/
 
 struct Vertex
 {
-	glm::vec4 Position; // only use vec3
-	glm::vec4 Normal;   // only use vec3
-	glm::vec4 texCoords; 
+	glm::vec3 Position; // only use vec3
+	glm::vec3 Normal;   // only use vec3
+	glm::vec2 texCoords;
+
+	glm::vec3 Tangent;
+	glm::vec3 BiTangent;
 };
 
 struct Face
 {
 	unsigned f1, f2, f3;
+	//glm::vec3 tangent;
+	//glm::vec
 };
 
 class Mesh

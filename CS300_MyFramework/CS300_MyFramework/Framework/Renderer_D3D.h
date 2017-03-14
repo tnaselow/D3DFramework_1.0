@@ -82,6 +82,11 @@ class Renderer_D3D
 		static ID3D11Texture2D		  *mDepthStencilTexture;
 		static ID3D11Debug			  *mDebugInterface;
 
+		static ID3D11Buffer           *mLineBuffer;
+		
+		static void renderTangentsBiTangents(const Mesh &mesh);
+		
+
 		static ID3D11ShaderResourceView *m_WrapTextureView;
 
 		static std::vector<ID3D11Buffer *> mC_Buffers;

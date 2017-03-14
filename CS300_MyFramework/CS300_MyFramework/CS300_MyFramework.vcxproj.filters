@@ -263,5 +263,6 @@
     <FxCompile Include="Shaders\PhongVert_PS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_VS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_PS.hlsl" />
+    <FxCompile Include="Shaders\Normal_VS.hlsl" />
   </ItemGroup>
 </Project>
