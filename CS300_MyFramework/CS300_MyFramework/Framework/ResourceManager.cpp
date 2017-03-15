@@ -97,7 +97,7 @@ Texture2D *ResourceManager::createNormalMap(std::string name, std::string dir, s
 										  scalar * heightLookup(x, yminus1, fourChannelImage, stride));
 
 			glm::vec3 N = glm::cross(S, T);
-			N.y *= -1;
+			//N.y *= -1;
 			N = glm::normalize(N);
 			// map normal to range of 0-1
 			N += 1;
@@ -162,9 +162,29 @@ Texture2D *ResourceManager::loadTexture(std::string name, std::string dir, std::
 	// maybe do something with this
 	int numChannels;
 	unsigned char *image = stbi_load((dir+name+extension).c_str(), &width, &height, &numChannels, 0);
+	unsigned char *fourChannelImage = new unsigned char[width * height * 4];
+	int stride = width * 4;
 
 	if (image == nullptr)
 		std::cout << "couldnt load image " + name << std::endl;
+	
+	if (numChannels < 4)
+	{
+		for (unsigned y = 0; y < height; ++y)
+		{
+			for (unsigned x = 0; x < width; ++x)
+			{
+				fourChannelImage[(x * 4 + y * stride)] = image[x * 3 + y * width * 3];
+				fourChannelImage[(x * 4 + y * stride) + 1] = image[x * 3 + y * width * 3 + 1];
+				fourChannelImage[(x * 4 + y * stride) + 2] = image[x * 3 + y * width * 3 + 2];
+				fourChannelImage[(x * 4 + y * stride) + 3] = 255;
+			}
+		}
+	}
+	else
+	{
+		fourChannelImage = image;
+	}
 
 	// setting up d3d texture
 	D3D11_TEXTURE2D_DESC textureDesc;
@@ -188,8 +208,8 @@ Texture2D *ResourceManager::loadTexture(std::string name, std::string dir, std::
 
 	D3D11_SUBRESOURCE_DATA data;
 	ZeroMemory(&data, sizeof(data));
-	data.pSysMem = image;
-	data.SysMemPitch = width * numChannels; // stride of texture
+	data.pSysMem = fourChannelImage;
+	data.SysMemPitch = stride; // stride of texture
 
 	ID3D11Texture2D *texture;
 	HR(Renderer_D3D::getDevice()->CreateTexture2D(&textureDesc, &data, &texture));
@@ -201,6 +221,7 @@ Texture2D *ResourceManager::loadTexture(std::string name, std::string dir, std::
 	
 	SafeRelease(texture);
 	stbi_image_free(image);
+	delete[] fourChannelImage;
 
 	return &m_Textures[name];
 }
@@ -344,19 +365,19 @@ Mesh *ResourceManager::loadMesh(std::string name, std::string filePath)
 	{
 		// spherical coords
 		float r = glm::length(vertices[i].Position);
-		float temp = (atan(vertices[i].Position.z / vertices[i].Position.x) + (PI / 2)) / (PI);
-		float temp2 = (atan(vertices[i].Position.y / r) + (PI / 2)) / (PI);
-		vertices[i].texCoords = glm::vec2(temp, temp2);
+		float temp = atan(vertices[i].Position.z / vertices[i].Position.x);
+		float temp2 = tan(vertices[i].Position.y / r);
+		vertices[i].texCoords = glm::vec2((temp + PI) / (2.0f * PI), (temp2 + PI) / (2.0f * PI));
 
 		// cubular coords
-		glm::vec3 mag = glm::abs(vertices[i].Position);
-		glm::vec3 biasUVs = glm::vec3(0.5f) + 0.5f * vertices[i].Position;
-		if (mag.x > mag.y && mag.x > mag.z)
-			vertices[i].texCoords = glm::vec2(biasUVs.y, biasUVs.z);
-		else if(mag.y > mag.z)
-			vertices[i].texCoords = glm::vec2(biasUVs.x, biasUVs.z);
-		else 
-			vertices[i].texCoords = glm::vec2(biasUVs.x, biasUVs.y);
+		//glm::vec3 mag = glm::abs(vertices[i].Position);
+		//glm::vec3 biasUVs = glm::vec3(0.5f) + 0.5f * vertices[i].Position;
+		//if (mag.x > mag.y && mag.x > mag.z)
+		//	vertices[i].texCoords = glm::vec2(biasUVs.y, biasUVs.z);
+		//else if(mag.y > mag.z)
+		//	vertices[i].texCoords = glm::vec2(biasUVs.x, biasUVs.z);
+		//else 
+		//	vertices[i].texCoords = glm::vec2(biasUVs.x, biasUVs.y);
 	}
 
 	// calculate tans and bitans
@@ -378,9 +399,11 @@ Mesh *ResourceManager::loadMesh(std::string name, std::string filePath)
 			glm::vec2 deltaUV2 = vertices[adjFaces[i][j].f3].texCoords - vertices[adjFaces[i][j].f1].texCoords;
 
 			float d = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+			float f = 0;
 			if (abs(d) < EPSILON)
-				continue;
-			float f = 1.0f / d;
+				f = 1;
+			else
+				f = 1.0f / d;
 
 			faceTangent.x = f * (deltaUV2.y * e1.x - deltaUV1.y * e2.x);
 			faceTangent.y = f * (deltaUV2.y * e1.y - deltaUV1.y * e2.y);
@@ -396,6 +419,7 @@ Mesh *ResourceManager::loadMesh(std::string name, std::string filePath)
 			biTangentMag += faceBiTangent.length();
 		}
 
+		assert(!isnan(tangent.x));
 		tangent = glm::normalize(tangent) * (tangentMag / adjFaces[i].size());
 		biTangent = glm::normalize(biTangent) * (biTangentMag / adjFaces[i].size());
 		vertices[i].Tangent = tangent;

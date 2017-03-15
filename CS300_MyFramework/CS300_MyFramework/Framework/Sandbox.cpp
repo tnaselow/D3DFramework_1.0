@@ -66,6 +66,7 @@ namespace Sandbox
 		eFloor.mScale = glm::vec3(20, 20, 20);
 
 		
+		lightData.camPosition = glm::vec3(0, 0, 0);
 		lightData.numLights = 8;
 		lightData.globalAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
 		lightData.falloff = 1;
