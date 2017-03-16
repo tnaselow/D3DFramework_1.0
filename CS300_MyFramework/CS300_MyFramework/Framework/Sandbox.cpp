@@ -51,6 +51,7 @@ namespace Sandbox
 
 		Texture2D *tex = ResourceManager::loadTexture("metal_roof_diff_512x512", "../textures/", ".tga");
 		Texture2D *norm = ResourceManager::createNormalMap("metal_roof_spec_512x512", "../textures/", ".tga");
+		//Texture2D *norm = ResourceManager::loadTexture("pillowNormal", "../textures/", ".png");
 		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
 		Renderer_D3D::getDevContext()->PSSetShaderResources(1, 1, &norm->m_SRV);
 	
@@ -70,7 +71,7 @@ namespace Sandbox
 		lightData.numLights = 8;
 		lightData.globalAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
 		lightData.falloff = 1;
-		lightData.specIntesity = 1;
+		lightData.specIntesity = 100;
 		lightData.fogColor = glm::vec3(0.0f, 0.2f, 0.4f);
 		lightData.attCoeffs = glm::vec3(1, 0.1, 0);
 		lightData.innerRadius = 15 * (PI / 180);
@@ -151,6 +152,7 @@ namespace Sandbox
 		}
 
 		ImGui::Separator();
+		ImGui::InputFloat("NS", &lightData.specIntesity);
 	
 		for(int i = 0; i < lightData.numLights; i++)
 		{

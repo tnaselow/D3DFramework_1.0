@@ -210,16 +210,24 @@ void Renderer_D3D::setLightBuffer(const LightBufferData &lights)
 	mapCBuffer(BUFFER_LIGHTS, sizeof(lights), &lights, SHADER_PIXEL);
 }
 
-void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh)
+void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh, Lines line)
 {
 	std::vector<Vertex> lines;
-	for(unsigned i = 0;  i < mesh.mVertices.size(); ++i)
+	for(unsigned i = 0;  i < 1; ++i)
 	{
 		Vertex v1;
 		v1.Position = mesh.mVertices[i].Position;
 		lines.push_back(v1);
 		Vertex v2;
-		v2.Position = mesh.mVertices[i].Position + mesh.mVertices[i].Normal;
+		glm::vec3 add;
+		if (line == LINE_NORMAL)
+			add = mesh.mVertices[i].Normal;
+		else if (line == LINE_TANGENT)
+			add = mesh.mVertices[i].Tangent;
+		else if (line == LINE_BITANGENT)
+			add = mesh.mVertices[i].BiTangent;
+
+		v2.Position = mesh.mVertices[i].Position + add * 0.4f;
 		lines.push_back(v2);
 	}
 
@@ -266,8 +274,17 @@ void Renderer_D3D::EndFrame()
 		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &mEntities[i].mEntity.mColor, SHADER_VERTEX);
 
 		// Draw tangents :)
-		//ResourceManager::getShader("Color")->Bind(SHADER_VERTEX | SHADER_PIXEL);
-		//renderTangentsBiTangents(*mEntities[i].mEntity.mMesh);
+		ResourceManager::getShader("Color")->Bind(SHADER_VERTEX | SHADER_PIXEL);
+		glm::vec4 color = glm::vec4(1, 0, 0, 1);
+		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &color, SHADER_VERTEX);
+		renderTangentsBiTangents(*mEntities[i].mEntity.mMesh, LINE_NORMAL);
+		color = glm::vec4(0, 1, 0, 1);
+		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &color, SHADER_VERTEX);
+		renderTangentsBiTangents(*mEntities[i].mEntity.mMesh, LINE_TANGENT);
+		color = glm::vec4(0, 0, 1, 1);
+		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &color, SHADER_VERTEX);
+		renderTangentsBiTangents(*mEntities[i].mEntity.mMesh, LINE_BITANGENT);
+
 
 		mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
 

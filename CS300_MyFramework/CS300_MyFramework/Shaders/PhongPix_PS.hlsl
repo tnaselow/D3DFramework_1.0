@@ -91,13 +91,13 @@ float3 calcSpecularBlinn(Light light, float3 N, float3 L, float3 V)
 {
 	//TODO: add system to switch blinn to phong
 
-	float3 halfwayDir = max(normalize(L + V), 0);
-	return light.specular * material.specular * /*pow(*/saturate(dot(N, halfwayDir));//, specularIntesity);
+	float3 halfwayDir = normalize(L + V);
+	return light.specular * material.specular * pow(saturate(dot(N, halfwayDir)), specularIntesity);
 }
 
 float3 calcSpecularPhong(Light light, float3 V, float3 R)
 {
-	return light.specular * material.specular * /*pow(*/max(dot(V, R), 0);// , specularIntesity);
+	return light.specular * material.specular * pow(max(dot(V, R), 0), specularIntesity);
 }
 
 float calcAttenuation(float dist)
@@ -130,15 +130,16 @@ float4 main(PS_IN IN) : SV_TARGET
 	TBN[2] = float4(IN.worldNormal, 0);
 	TBN[3] = float4(0, 0, 0, 1);
 	transpose(TBN);
-	//float3 N = normalMap.Sample(textureSampler, IN.uvCoords);
-	//N = mul(float4(N, 0), TBN);
-	//N = normalize(N);
+	float3 N = normalMap.Sample(textureSampler, IN.uvCoords);
+	N = (N * 2) - float3(1,1,1);
+	N = mul(float4(N, 0), TBN);
+	N = normalize(N);
 
 	float zFar = 100;
 	float zNear = 50;
 
-	float3 N = IN.worldNormal;
-	N = normalize(N);
+	//float3 N = IN.worldNormal;
+	//N = normalize(N);
 
 	float3 color = float3(0,0,0);
 	
@@ -154,12 +155,13 @@ float4 main(PS_IN IN) : SV_TARGET
 		L = normalize(L);
 
 		// calculate view vector and view distance
-		float3 V = float3(0, 0, 0);// -IN.worldPosition;
+		float3 V =  -IN.worldPosition;
 		float distV = length(V);
 		V = normalize(V);
 
 		// calculate reflection vector
-		float3 R = 2 * dot(N, L) * N - L;
+		//float3 R = 2 * dot(N, L) * N - L;
+		float3 R = reflect(-L, N);
 		R = normalize(R);
 
 		float3 Ia = calcAmbient(lights[i]);
@@ -197,15 +199,24 @@ float4 main(PS_IN IN) : SV_TARGET
 
 	//return normalMap.Sample(textureSampler, IN.uvCoords);
 	//return diffuseTexture.Sample(textureSampler, IN.uvCoords);
-	//float3 V = camPosition.xyz - IN.worldPosition;
 	//V = normalize(V);
-	//float3 L = normalize(-lights[0].direction.xyz);
 	//float3 halfwayDir = normalize(L + V);
 	//float3 R = 2 * dot(N, L) * N - L;//reflect(-L, N);
 	//R = normalize(R);
 	
 	//return float4(-V, 1);
 	//return float4(max(dot(V, R), 0), 0, 0, 1);//, specularIntesity);
-
+	
+	//float3 L = normalize(-lights[0].direction.xyz);
+	//float doto = 2 * dot(N, L);
+	//float3 scaledN = doto * N;
+	//
+	//float3 R = scaledN - L;
+	//
+	//float3 V = camPosition.xyz - IN.worldPosition;
+	//V = normalize(V);
+	//
+	//float val = pow(max(dot(V, R), 0), 32);
+	//return float4(val, 0, 0, 1);
 	return float4(color, 1);
 }

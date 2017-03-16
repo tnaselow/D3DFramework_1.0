@@ -51,7 +51,7 @@ Texture2D *ResourceManager::createNormalMap(std::string name, std::string dir, s
 	unsigned char *fourChannelImage = new unsigned char[width * height * 4];
 
 	//TODO: expose this to imgui
-	float scalar = 20;
+	float scalar = 0.5;
 
 	unsigned stride = width * 4;
 	if(numChannels < 4)
@@ -399,19 +399,27 @@ Mesh *ResourceManager::loadMesh(std::string name, std::string filePath)
 			glm::vec2 deltaUV2 = vertices[adjFaces[i][j].f3].texCoords - vertices[adjFaces[i][j].f1].texCoords;
 
 			float d = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-			float f = 0;
 			if (abs(d) < EPSILON)
-				f = 1;
+			{
+				faceTangent.x = 1.0f;
+				faceTangent.y = 0.0f;
+				faceTangent.z = 0.0f;
+
+				faceBiTangent.x = 0.0f;
+				faceBiTangent.y = 0.0f;
+				faceBiTangent.z = 1.0f;
+			}
 			else
-				f = 1.0f / d;
+			{
+				float f = 1.0f / d;
+				faceTangent.x = f * (deltaUV2.y * e1.x - deltaUV1.y * e2.x);
+				faceTangent.y = f * (deltaUV2.y * e1.y - deltaUV1.y * e2.y);
+				faceTangent.z = f * (deltaUV2.y * e1.z - deltaUV1.y * e2.z);
 
-			faceTangent.x = f * (deltaUV2.y * e1.x - deltaUV1.y * e2.x);
-			faceTangent.y = f * (deltaUV2.y * e1.y - deltaUV1.y * e2.y);
-			faceTangent.z = f * (deltaUV2.y * e1.z - deltaUV1.y * e2.z);
-
-			faceBiTangent.x = f * (-deltaUV2.x * e1.x + deltaUV1.x * e2.x);
-			faceBiTangent.y = f * (-deltaUV2.x * e1.y + deltaUV1.x * e2.y);
-			faceBiTangent.z = f * (-deltaUV2.x * e1.z + deltaUV1.x * e2.z);
+				faceBiTangent.x = f * (-deltaUV2.x * e1.x + deltaUV1.x * e2.x);
+				faceBiTangent.y = f * (-deltaUV2.x * e1.y + deltaUV1.x * e2.y);
+				faceBiTangent.z = f * (-deltaUV2.x * e1.z + deltaUV1.x * e2.z);
+			}
 
 			tangent += faceTangent;
 			biTangent += faceBiTangent;

@@ -27,6 +27,12 @@ enum BufferUsage
 	USAGE_DYNAMIC,
 	USAGE_CONSTANT
 };
+enum Lines
+{
+	LINE_NORMAL,
+	LINE_TANGENT,
+	LINE_BITANGENT
+};
 
 enum BufferTypes
 {
@@ -84,7 +90,7 @@ class Renderer_D3D
 
 		static ID3D11Buffer           *mLineBuffer;
 		
-		static void renderTangentsBiTangents(const Mesh &mesh);
+		static void renderTangentsBiTangents(const Mesh &mesh, Lines line);
 		
 
 		static ID3D11ShaderResourceView *m_WrapTextureView;
