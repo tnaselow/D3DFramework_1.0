@@ -42,6 +42,7 @@ enum BufferTypes
 	BUFFER_MATERIAL,
 	BUFFER_NORMAL_TYPE,
 	BUFFER_COLOR,
+	BUFFER_MISC,
 
 	BUFFER_NUM_BUFFERS
 };
@@ -75,6 +76,11 @@ class Renderer_D3D
 		static void mapCBuffer(BufferTypes buffer, size_t size, const void *data, unsigned bindType, int bindRegister = -1);
 
 		static ID3D11RasterizerState  *mRasterState;
+
+		static bool m_RenderNormals;
+		static bool m_RenderTangents;
+		static bool m_RenderBiTangents;
+		static int m_UseNormalMapAsTex;
 	private:
 		static std::vector<EntityShader> mEntities;
 

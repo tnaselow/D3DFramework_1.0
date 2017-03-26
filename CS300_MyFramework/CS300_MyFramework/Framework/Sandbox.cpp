@@ -144,6 +144,12 @@ namespace Sandbox
 		for (int i = 0; i < 3; i++)
 			e1.mScale[i] = scale;
 		ImGui::InputFloat3("Position", &e1.mPosition[0]);
+		ImGui::Checkbox("Draw Normals", &Renderer_D3D::m_RenderNormals);
+		ImGui::Checkbox("Draw Tangents", &Renderer_D3D::m_RenderTangents);
+		ImGui::Checkbox("Draw BiTangents", &Renderer_D3D::m_RenderBiTangents);
+		ImGui::Checkbox("Use Normal Map as Tex", reinterpret_cast<bool*>(&Renderer_D3D::m_UseNormalMapAsTex));
+
+
 		if(ImGui::CollapsingHeader("Material"))
 		{
 			ImGui::ColorEdit3("Ambient", &e1.mMaterial.ambient[0]);

@@ -73,6 +73,11 @@ cbuffer MATERIAL_BUFFER : register(b3)
 	Material material;
 }
 
+cbuffer MISC_BUFFER : register(b6)
+{
+	int useNormalMapTex;
+}
+
 
 float3 calcAmbient(Light light)
 {
@@ -124,6 +129,7 @@ float calcSpotlightFactor(Light light, float3 worldPos)
 
 float4 main(PS_IN IN) : SV_TARGET
 {
+
 	float4x4 TBN;
 	TBN[0] = float4(IN.tangent, 0);
 	TBN[1] = float4(IN.biTangent, 0);
@@ -131,7 +137,11 @@ float4 main(PS_IN IN) : SV_TARGET
 	TBN[3] = float4(0, 0, 0, 1);
 	transpose(TBN);
 	float3 N = normalMap.Sample(textureSampler, IN.uvCoords);
+	if (useNormalMapTex)
+		return float4(abs(N), 1);
 	N = (N * 2) - float3(1,1,1);
+
+
 	N = mul(float4(N, 0), TBN);
 	N = normalize(N);
 
