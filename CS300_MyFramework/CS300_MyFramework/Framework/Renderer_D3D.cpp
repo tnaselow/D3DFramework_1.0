@@ -19,6 +19,7 @@ End Header --------------------------------------------------------*/
 #include "glm/gtx/transform.hpp"
 #include <iostream>
 #include "ResourceManager.h"
+#include "OceanEx.h"
 
 ID3D11Device		*Renderer_D3D::mDevice;
 ID3D11DeviceContext *Renderer_D3D::mDeviceContext;
@@ -35,14 +36,29 @@ std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 std::vector<EntityShader>    Renderer_D3D::mEntities;
 ID3D11Buffer           *Renderer_D3D::mLineBuffer;
 
+// temp
+cOcean *Renderer_D3D::ocean = nullptr;
+
 
 bool Renderer_D3D::m_RenderNormals    = false;
 bool Renderer_D3D::m_RenderTangents   = false;
 bool Renderer_D3D::m_RenderBiTangents = false;
 int Renderer_D3D::m_UseNormalMapAsTex = false;
 
+namespace
+{
+	// TEMP OCEAN
+	Shader oceanShader;
+}
 
-
+void Renderer_D3D::setWindDir(float *dir)
+{
+	if (!ocean || dir[0] == ocean->w.x)return; ocean->w = vector2(dir[0], dir[1]);
+	cOcean *temp = ocean;
+	ocean = new cOcean(10, temp->A, temp->w, 10, false);
+	delete temp;
+}
+void Renderer_D3D::setAmplitude(float a) { if (!ocean)return; ocean->g = a; }
 
 void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 {
@@ -105,10 +121,12 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	D3D11_RASTERIZER_DESC rasterDesc;
 	rasterDesc.AntialiasedLineEnable = false;
 	rasterDesc.CullMode = D3D11_CULL_BACK;
+	//rasterDesc.CullMode = D3D11_CULL_NONE;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
 	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	//rasterDesc.FillMode = D3D11_FILL_WIREFRAME;
 	rasterDesc.FrontCounterClockwise = true;
 	rasterDesc.MultisampleEnable = false;
 	rasterDesc.ScissorEnable = false;
@@ -148,6 +166,14 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	makeCBuffer(BUFFER_NORMAL_TYPE, 16, USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_COLOR, sizeof(glm::vec4), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_MISC, 16, USAGE_DYNAMIC);
+
+	// TODO temp
+	ocean = new cOcean(20, 0.0005f, vector2(0.0f, 32.0f), 20, false);
+#ifdef _DEBUG
+	oceanShader.loadPreCopiled("../Debug/", "Ocean", true);
+#else
+	oceanShader.loadPreCopiled("../Release/", "Ocean", true);
+#endif
 }
 
 void Renderer_D3D::makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data)
@@ -257,6 +283,7 @@ void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh, Lines line)
 
 void Renderer_D3D::EndFrame()
 {
+	mDeviceContext->RSSetState(mRasterState);
 	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 	mDeviceContext->ClearDepthStencilView(mRTV_DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
 	UINT stride = sizeof(Vertex);
@@ -316,6 +343,37 @@ void Renderer_D3D::EndFrame()
 
 		mDeviceContext->DrawIndexed(mEntities[i].mEntity.mMesh->mIndices.size(), 0, 0);
 	}
+	
+	static float timer = 0;
+	timer += 0.01f;
+	ocean->evaluateWaves(timer);
+	//
+	D3D11_MAPPED_SUBRESOURCE map;
+	ZeroMemory(&map, sizeof(map));
+	HR(mDeviceContext->Map(ocean->m_VertBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map));
+	memcpy(map.pData, ocean->vertices, ocean->vertex_count* sizeof(vertex_ocean));
+	mDeviceContext->Unmap(ocean->m_VertBuffer, 0);
+	///////////////////////////////
+
+	// Draw Ocean
+
+	glm::mat4x4 model = glm::translate(glm::vec3(0,-1,-1)) *
+		glm::scale(glm::vec3(1,1,1));
+
+	glm::mat4x4 normModel = model;
+	normModel = glm::transpose(glm::inverse(normModel));
+	glm::mat4x4 models[] = { model, normModel };
+
+	mapCBuffer(BUFFER_MODEL, sizeof(glm::mat4x4) * 2, models, SHADER_VERTEX);
+	oceanShader.Bind(SHADER_VERTEX | SHADER_PIXEL);
+
+	stride = sizeof(vertex_ocean);
+	mDeviceContext->IASetVertexBuffers(0, 1, &ocean->m_VertBuffer, &stride, &offset);
+	mDeviceContext->IASetIndexBuffer(ocean->m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	mDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mDeviceContext->DrawIndexed(ocean->indices_count, 0, 0);
+
+
 	mEntities.clear();
 	Shader::unBind();
 

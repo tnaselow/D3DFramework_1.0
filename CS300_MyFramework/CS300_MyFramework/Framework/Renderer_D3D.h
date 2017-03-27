@@ -19,6 +19,12 @@ End Header --------------------------------------------------------*/
 #include "Sandbox.h"
 #include "Shader.h"
 
+class cOcean;
+
+namespace Ocean {
+	struct OceanMesh;
+}
+
 class Mesh;
 class Shader;
 
@@ -61,6 +67,8 @@ class Renderer_D3D
 
 		static void CleanUp();
 
+
+		static void DrawOcean(Ocean::OceanMesh &mesh);
 		static void DrawEntity(Entity &entity, Shader &shader);
 		static void EndFrame();
 
@@ -81,6 +89,9 @@ class Renderer_D3D
 		static bool m_RenderTangents;
 		static bool m_RenderBiTangents;
 		static int m_UseNormalMapAsTex;
+		static cOcean *ocean;
+		static void setWindDir(float *dir);
+		static void setAmplitude(float a);
 	private:
 		static std::vector<EntityShader> mEntities;
 

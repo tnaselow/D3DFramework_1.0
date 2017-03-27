@@ -90,6 +90,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/Framework;$(ProjectDir)/ImGUI;$(SolutionDir)/CS300_MyFramework;$(SolutionDir)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -107,6 +108,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)/Framework;$(ProjectDir)/ImGUI;$(SolutionDir)/CS300_MyFramework;$(SolutionDir)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FloatingPointModel>Strict</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,12 +160,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Framework\complex.cc" />
     <ClCompile Include="Framework\GUI.cpp" />
     <ClCompile Include="Framework\Mesh.cpp" />
+    <ClCompile Include="Framework\Ocean.cpp" />
     <ClCompile Include="Framework\Renderer_D3D.cpp" />
     <ClCompile Include="Framework\ResourceManager.cpp" />
     <ClCompile Include="Framework\Sandbox.cpp" />
     <ClCompile Include="Framework\Shader.cpp" />
+    <ClCompile Include="Framework\vector.cc" />
     <ClCompile Include="Framework\Window_DX.cpp" />
     <ClCompile Include="ImGUI\imgui.cpp" />
     <ClCompile Include="ImGUI\imgui_demo.cpp" />
@@ -172,14 +177,18 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Framework\complex.h" />
     <ClInclude Include="Framework\GUI.h" />
     <ClInclude Include="Framework\Mesh.h" />
+    <ClInclude Include="Framework\Ocean.h" />
+    <ClInclude Include="Framework\OceanEx.h" />
     <ClInclude Include="Framework\Renderer_D3D.h" />
     <ClInclude Include="Framework\ResourceManager.h" />
     <ClInclude Include="Framework\Sandbox.h" />
     <ClInclude Include="Framework\Shader.h" />
     <ClInclude Include="Framework\Texture2D.h" />
     <ClInclude Include="Framework\Utils.h" />
+    <ClInclude Include="Framework\vector.h" />
     <ClInclude Include="Framework\Window_DX.h" />
     <ClInclude Include="gmtl\AABox.h" />
     <ClInclude Include="gmtl\AABoxOps.h" />
@@ -270,6 +279,18 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.1</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shaders\Ocean_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\Ocean_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="Shaders\PhongPix_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>

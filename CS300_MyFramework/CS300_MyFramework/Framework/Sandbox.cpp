@@ -25,6 +25,7 @@ End Header --------------------------------------------------------*/
 
 #define PI 3.14159265359f
 
+
 namespace
 {
 	Entity e1;
@@ -37,6 +38,7 @@ namespace
 	LightBufferData lightData;
 
 	ID3D11Buffer *ProjectionBuffer;
+
 }
 
 namespace Sandbox
@@ -122,6 +124,18 @@ namespace Sandbox
 
 		ImGui_ImplDX11_NewFrame();
 
+		ImGui::Begin("Ocean");
+		if(Renderer_D3D::ocean)
+		{
+			static float dir[2] = {0,32};
+			static float a = 9.8;
+			ImGui::InputFloat2("Wind", dir);
+			ImGui::InputFloat("Amplitude", &a);
+			Renderer_D3D::setWindDir(dir);
+			Renderer_D3D::setAmplitude(a);
+		}
+		ImGui::End();
+
 		ImGui::Begin("CS300_Framework");
 
 		static char buff[256];
@@ -195,8 +209,8 @@ namespace Sandbox
 
 		ImGui::End();
 		
-		Renderer_D3D::DrawEntity(e1, shader);
-		Renderer_D3D::DrawEntity(eFloor, shader);
+		//Renderer_D3D::DrawEntity(e1, shader);
+		//Renderer_D3D::DrawEntity(eFloor, shader);
 
 		Renderer_D3D::EndFrame();
 	}
