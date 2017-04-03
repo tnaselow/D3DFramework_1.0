@@ -127,11 +127,18 @@ namespace Sandbox
 		ImGui::Begin("Ocean");
 		if(Renderer_D3D::ocean)
 		{
+			static bool wireFrame = false;
+			ImGui::Checkbox("WireFrame", &wireFrame);
+			if (wireFrame)
+				Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mRasterState);
+			else
+				Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mWireFrameRaster);
+
 			static float dir[2] = {0,32};
-			static float a = 9.8;
-			ImGui::InputFloat2("Wind", dir);
+			static float a = 0.0005f;
+			//ImGui::InputFloat2("Wind", dir);
 			ImGui::InputFloat("Amplitude", &a);
-			Renderer_D3D::setWindDir(dir);
+			//Renderer_D3D::setWindDir(dir);
 			Renderer_D3D::setAmplitude(a);
 		}
 		ImGui::End();
@@ -201,7 +208,7 @@ namespace Sandbox
 			lightBall.mScale = glm::vec3(0.25f, 0.25f, 0.25f);
 			lightBall.mColor = lightData.lights[i].diffuse;
 			lightBall.mMesh = ResourceManager::loadMesh("sphere", "../models/sphere.obj");
-			Renderer_D3D::DrawEntity(lightBall, *colorShader);
+			//Renderer_D3D::DrawEntity(lightBall, *colorShader);
 		}
 		
 		Renderer_D3D::setLightBuffer(lightData);

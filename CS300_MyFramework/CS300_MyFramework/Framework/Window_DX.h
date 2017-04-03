@@ -18,7 +18,7 @@ End Header --------------------------------------------------------*/
 class Window_DX
 {
 	public:
-		Window_DX(const std::string &title = std::string("DX Window"), int width = 800, int height = 600);
+		Window_DX(const std::string &title = std::string("My Ocean Demo"), int width = 800, int height = 600);
 
 		bool Loop();
 

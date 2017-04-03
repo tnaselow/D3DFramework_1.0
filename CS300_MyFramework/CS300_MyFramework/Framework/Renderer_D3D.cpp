@@ -35,6 +35,8 @@ std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 
 std::vector<EntityShader>    Renderer_D3D::mEntities;
 ID3D11Buffer           *Renderer_D3D::mLineBuffer;
+ID3D11RasterizerState  *Renderer_D3D::mWireFrameRaster;
+
 
 // temp
 cOcean *Renderer_D3D::ocean = nullptr;
@@ -58,7 +60,13 @@ void Renderer_D3D::setWindDir(float *dir)
 	ocean = new cOcean(10, temp->A, temp->w, 10, false);
 	delete temp;
 }
-void Renderer_D3D::setAmplitude(float a) { if (!ocean)return; ocean->g = a; }
+void Renderer_D3D::setAmplitude(float a) 
+{
+	if (!ocean || a == ocean->A)return;
+
+	delete ocean;
+	ocean = new cOcean(128, a, vector2(32, 0.0f), 32, false);
+}
 
 void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 {
@@ -135,6 +143,10 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	
 	HR(mDevice->CreateRasterizerState(&rasterDesc, &mRasterState));
 
+	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;
+	HR(mDevice->CreateRasterizerState(&rasterDesc, &mWireFrameRaster));
+
+
 	D3D11_VIEWPORT vp;
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
@@ -168,7 +180,7 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	makeCBuffer(BUFFER_MISC, 16, USAGE_DYNAMIC);
 
 	// TODO temp
-	ocean = new cOcean(20, 0.0005f, vector2(0.0f, 32.0f), 20, false);
+	ocean = new cOcean(128, 0.0005f, vector2(32, 0.0f), 32, false);
 #ifdef _DEBUG
 	oceanShader.loadPreCopiled("../Debug/", "Ocean", true);
 #else
@@ -283,7 +295,8 @@ void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh, Lines line)
 
 void Renderer_D3D::EndFrame()
 {
-	mDeviceContext->RSSetState(mRasterState);
+	//mDeviceContext->RSSetState(mRasterState);
+	
 	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 	mDeviceContext->ClearDepthStencilView(mRTV_DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
 	UINT stride = sizeof(Vertex);
@@ -345,8 +358,8 @@ void Renderer_D3D::EndFrame()
 	}
 	
 	static float timer = 0;
-	timer += 0.01f;
-	ocean->evaluateWaves(timer);
+	timer += 0.001f;
+	ocean->evaluateWavesFFT(timer);
 	//
 	D3D11_MAPPED_SUBRESOURCE map;
 	ZeroMemory(&map, sizeof(map));

@@ -17,5 +17,6 @@ PS_IN main( in VS_IN IN )
 
 	OUT.m_OutPos = mul(Projection, mul(Model, float4(IN.m_NewPos, 1)));
 	OUT.m_WorldNormal = mul(Projection, mul(Model, float4(IN.m_Normal, 1)));
+	OUT.m_WorldPosition = mul(Model, float4(IN.m_NewPos, 1));
 	return OUT;
 }

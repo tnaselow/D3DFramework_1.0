@@ -13,4 +13,5 @@ struct PS_IN
 {
 	float4 m_OutPos : SV_POSITION;
 	float3 m_WorldNormal : NORMAL;
+	float3 m_WorldPosition : POSITION;
 };

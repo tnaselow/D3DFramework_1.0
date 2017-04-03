@@ -84,6 +84,7 @@ class Renderer_D3D
 		static void mapCBuffer(BufferTypes buffer, size_t size, const void *data, unsigned bindType, int bindRegister = -1);
 
 		static ID3D11RasterizerState  *mRasterState;
+		static ID3D11RasterizerState  *mWireFrameRaster;
 
 		static bool m_RenderNormals;
 		static bool m_RenderTangents;
