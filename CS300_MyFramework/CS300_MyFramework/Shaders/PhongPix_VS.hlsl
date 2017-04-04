@@ -15,6 +15,7 @@ End Header --------------------------------------------------------*/
 // BUFFERS
 cbuffer PROJECTION_BUFFER : register(b0)
 {
+	float4x4 ViewSpace;
 	float4x4 Projection;
 };
 
@@ -28,7 +29,7 @@ PS_IN main( VS_IN IN)
 {
 	PS_IN OUT;
 	float4 worldpos = mul(Model, float4(IN.position, 1));
-	OUT.position = mul(Projection, worldpos);
+	OUT.position = mul(Projection, mul(ViewSpace, worldpos));
 	OUT.worldPosition = worldpos;
 	OUT.worldNormal = mul(Model, float4(IN.normal, 0));
 	OUT.uvCoords = IN.texCoords;

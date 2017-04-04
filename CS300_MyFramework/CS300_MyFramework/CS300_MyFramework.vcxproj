@@ -172,6 +172,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Framework\Camera.h" />
     <ClInclude Include="Framework\GUI.h" />
     <ClInclude Include="Framework\Mesh.h" />
     <ClInclude Include="Framework\Renderer_D3D.h" />

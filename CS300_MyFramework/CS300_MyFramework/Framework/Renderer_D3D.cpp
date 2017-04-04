@@ -19,6 +19,7 @@ End Header --------------------------------------------------------*/
 #include "glm/gtx/transform.hpp"
 #include <iostream>
 #include "ResourceManager.h"
+#include "Camera.h"
 
 ID3D11Device		*Renderer_D3D::mDevice;
 ID3D11DeviceContext *Renderer_D3D::mDeviceContext;
@@ -139,9 +140,16 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	HR(mDevice->CreateBuffer(&buffDesc, nullptr, &mLineBuffer));
 
 	// init projection buffer
-	glm::mat4x4 projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	//glm::mat4x4 projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+	//glm::mat4 camMat = cam.getTransform();
+	//glm::mat4 proj[2] =
+	//{
+	//	camMat,
+	//	projMat
+	//};
 
-	makeCBuffer(BUFFER_PROJECTION, sizeof(projMat), USAGE_DYNAMIC, &projMat);
+	makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC);
+	//makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC, &projMat);
 	makeCBuffer(BUFFER_MODEL, sizeof(glm::mat4x4) * 2, USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_LIGHTS, sizeof(LightBufferData), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_MATERIAL, sizeof(Material), USAGE_DYNAMIC);

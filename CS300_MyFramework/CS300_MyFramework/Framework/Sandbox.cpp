@@ -22,6 +22,8 @@ End Header --------------------------------------------------------*/
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include <ctime>
+#include "Camera.h"
+#include <glm/gtc/matrix_transform.inl>
 
 #define PI 3.14159265359f
 
@@ -37,6 +39,8 @@ namespace
 	LightBufferData lightData;
 
 	ID3D11Buffer *ProjectionBuffer;
+	Camera cam(glm::vec3(0, 0, -1));
+	
 }
 
 namespace Sandbox
@@ -56,13 +60,13 @@ namespace Sandbox
 		Renderer_D3D::getDevContext()->PSSetShaderResources(1, 1, &norm->m_SRV);
 	
 		e1.mMesh = ResourceManager::loadMesh("sword", "../models/sword.obj");
-		e1.mPosition.z = -5;
+		e1.mPosition.z = 5;
 		e1.mPosition.y = -2;
 		e1.mMaterial.diffuse = glm::vec4(0.25f, 0.25f, 0.25f, 1);
 		e1.mMaterial.specular = glm::vec4(0.25f, 0.25f, 0.25f, 1);
 
 		eFloor.mMesh = ResourceManager::loadMesh("cube", "../models/cube.obj");
-		eFloor.mPosition.z = -14;
+		eFloor.mPosition.z = 14;
 		eFloor.mPosition.y = -14;
 		eFloor.mScale = glm::vec3(20, 20, 20);
 
@@ -99,6 +103,15 @@ namespace Sandbox
 
 	void update()
 	{
+		//glm::mat4x4 projMat = glm::perspectiveRH(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+		glm::mat4x4 projMat = glm::perspectiveRH(45.0f, 1.0f, 0.1f, 100.0f);
+		glm::mat4 camMat = cam.getTransform();
+		glm::mat4 projData[2] =
+		{
+			camMat,
+			projMat
+		};
+		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, projData, SHADER_VERTEX);
 
 		static float timer = 0;
 		timer = clock() * 0.001f;
@@ -111,7 +124,7 @@ namespace Sandbox
 
 				float angle = ((i + 1.0f) / lightData.numLights) * 2 * PI;
 
-				lightData.lights[i].position = glm::vec4(cos(angle + timer) * radius, 0, sin(angle + timer) * radius - 5, 0);
+				lightData.lights[i].position = glm::vec4(cos(angle + timer) * radius, 0, sin(angle + timer) * radius + 5, 0);
 				lightData.lights[i].direction = glm::normalize( glm::vec4(e1.mPosition.xyz, 1) - lightData.lights[i].position);
 			}
 			
@@ -130,6 +143,15 @@ namespace Sandbox
 		{
 			e1.mMesh = ResourceManager::loadMesh(buff, "../models/"+std::string(buff));
 		}
+		ImGui::Separator();
+		static float yaw = -90;
+		ImGui::SliderFloat("Yaw", &yaw, -90, 90);
+		cam.setYaw(yaw);
+
+		static float pitch = 0;
+		ImGui::SliderFloat("Pitch", &pitch, -90, 90);
+		cam.setPitch(pitch);
+
 		ImGui::Separator();
 
 		ImGui::Checkbox("Blinn", reinterpret_cast<bool *>(&lightData.useBlinn));
@@ -196,7 +218,7 @@ namespace Sandbox
 		ImGui::End();
 		
 		Renderer_D3D::DrawEntity(e1, shader);
-		Renderer_D3D::DrawEntity(eFloor, shader);
+		//Renderer_D3D::DrawEntity(eFloor, shader);
 
 		Renderer_D3D::EndFrame();
 	}

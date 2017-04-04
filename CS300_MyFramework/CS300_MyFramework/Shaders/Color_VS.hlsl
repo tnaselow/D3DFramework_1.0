@@ -14,6 +14,7 @@ End Header --------------------------------------------------------*/
 
 cbuffer PROJECTION_BUFFER : register(b0)
 {
+	float4x4 ViewSpace;
 	float4x4 Projection;
 };
 
@@ -34,7 +35,7 @@ VOut main(VS_IN IN)
 	VOut output;
 
 	// calculate the perspective projected position
-	output.position = mul(Projection, mul(Model, float4(IN.position, 1)));
+	output.position = mul(Projection, mul(ViewSpace, mul(Model, float4(IN.position, 1))));
 	output.color = color;
 
 	return output;
