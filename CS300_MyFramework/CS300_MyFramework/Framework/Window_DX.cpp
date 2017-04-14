@@ -23,6 +23,8 @@ End Header --------------------------------------------------------*/
 #include "Sandbox.h"
 
 bool Window_DX::mClosing = false;
+int Window_DX::mWidth;
+int Window_DX::mHeight;
 
 LRESULT CALLBACK Window_DX::DefaultWinCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -39,6 +41,11 @@ LRESULT CALLBACK Window_DX::DefaultWinCallback(HWND hwnd, UINT message, WPARAM w
 				ImGui_ImplDX11_InvalidateDeviceObjects();
 				Renderer_D3D::resizeBackBuffer(lParam);
 				ImGui_ImplDX11_CreateDeviceObjects();
+
+				unsigned width = (UINT)LOWORD(lParam);
+				unsigned height = (UINT)HIWORD(lParam);
+				mWidth = width;
+				mHeight = height;
 			}
 		}
 		break;
@@ -56,9 +63,11 @@ LRESULT CALLBACK Window_DX::DefaultWinCallback(HWND hwnd, UINT message, WPARAM w
 
 
 
-Window_DX::Window_DX(const std::string &title, int width, int height) : mWidth(width), mHeight(height)
+Window_DX::Window_DX(const std::string &title, int width, int height) 
 {
 	WNDCLASSEX wcex;
+	mWidth = width;
+	mHeight = height;
 
 	mHInstance = static_cast<HINSTANCE>(GetModuleHandleW(nullptr));
 

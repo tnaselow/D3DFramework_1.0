@@ -75,6 +75,8 @@ class Renderer_D3D
 		static void makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data = nullptr);
 		static void mapCBuffer(BufferTypes buffer, size_t size, const void *data, unsigned bindType, int bindRegister = -1);
 
+		static void genEnviornMap(glm::vec3 pos);
+
 		static ID3D11RasterizerState  *mRasterState;
 
 		static bool m_RenderNormals;
@@ -82,11 +84,14 @@ class Renderer_D3D
 		static bool m_RenderBiTangents;
 		static int m_UseNormalMapAsTex;
 	private:
+		static ID3D11RenderTargetView *mEnviorns_RTV[6];
+		static ID3D11ShaderResourceView *mEviorns_SRV[6];
+
+		static IDXGISwapChain	   *mSwapChain;
 		static std::vector<EntityShader> mEntities;
 
 		static ID3D11Device		   *mDevice;
 		static ID3D11DeviceContext *mDeviceContext;
-		static IDXGISwapChain	   *mSwapChain;
 
 		static ID3D11RenderTargetView *mRTV_BackBuffer;
 		static ID3D11DepthStencilView *mRTV_DepthStencil;
@@ -95,6 +100,8 @@ class Renderer_D3D
 		static ID3D11Debug			  *mDebugInterface;
 
 		static ID3D11Buffer           *mLineBuffer;
+
+		static ID3D11DepthStencilState *mDepthStencilState;
 		
 		static void renderTangentsBiTangents(const Mesh &mesh, Lines line);
 		

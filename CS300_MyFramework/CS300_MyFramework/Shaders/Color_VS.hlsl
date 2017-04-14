@@ -35,6 +35,7 @@ VOut main(VS_IN IN)
 	VOut output;
 
 	// calculate the perspective projected position
+	//output.position = mul(ViewSpace, mul(Model, float4(IN.position, 1)));
 	output.position = mul(Projection, mul(ViewSpace, mul(Model, float4(IN.position, 1))));
 	output.color = color;
 

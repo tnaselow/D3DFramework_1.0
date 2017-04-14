@@ -35,6 +35,12 @@ std::vector<ID3D11Buffer *> Renderer_D3D::mC_Buffers(BUFFER_NUM_BUFFERS);
 
 std::vector<EntityShader>    Renderer_D3D::mEntities;
 ID3D11Buffer           *Renderer_D3D::mLineBuffer;
+ID3D11DepthStencilState *Renderer_D3D::mDepthStencilState;
+
+ID3D11RenderTargetView   *Renderer_D3D::mEnviorns_RTV[6];
+ID3D11ShaderResourceView *Renderer_D3D::mEviorns_SRV[6];
+
+
 
 
 bool Renderer_D3D::m_RenderNormals    = false;
@@ -105,7 +111,8 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 
 	D3D11_RASTERIZER_DESC rasterDesc;
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_BACK;
+	//rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.CullMode = D3D11_CULL_NONE;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -139,6 +146,32 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	buffDesc.Usage = D3D11_USAGE_DYNAMIC;
 	HR(mDevice->CreateBuffer(&buffDesc, nullptr, &mLineBuffer));
 
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	ZeroMemory(&dsDesc, sizeof(dsDesc));
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	HR(mDevice->CreateDepthStencilState(&dsDesc, &mDepthStencilState));
+	mDeviceContext->OMSetDepthStencilState(mDepthStencilState, 0xFF);
+
 	// init projection buffer
 	//glm::mat4x4 projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 	//glm::mat4 camMat = cam.getTransform();
@@ -147,6 +180,14 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	//	camMat,
 	//	projMat
 	//};
+
+	// generate enviornment map texture stuff -------------------------
+	
+	for(int i = 0; i < 6; ++i)
+	{
+		
+	}
+
 
 	makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC);
 	//makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC, &projMat);

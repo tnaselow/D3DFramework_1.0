@@ -19,10 +19,21 @@ class Camera
 
 		glm::mat4 getTransform()
 		{
-			return glm::inverse(glm::mat4(glm::vec4(m_Right.xyz, 0), 
-								glm::vec4(m_Up.xyz, 0), 
-								glm::vec4(m_Forward.xyz, 0), 
-								glm::vec4(m_Position.xyz, 1)));
+			//return glm::inverse(glm::mat4(glm::vec4(m_Right.xyz, 0),
+			//	glm::vec4(m_Up.xyz, 0),
+			//	glm::vec4(m_Forward.xyz, 0),
+			//	glm::vec4(m_Position.xyz, 1)));
+
+			glm::mat4 camToWorld(glm::mat4(glm::vec4(m_Right.xyz, 0),
+				glm::vec4(m_Up.xyz, 0),
+				-glm::vec4(m_Forward.xyz, 0), glm::vec4(0, 0, 0, 1)));
+
+			glm::mat4 camTrans(glm::vec4(1, 0, 0, 0),
+				glm::vec4(0, 1, 0, 0),
+				glm::vec4(0, 0, 1, 0),
+				glm::vec4(-m_Position, 1));
+
+			return glm::transpose(camToWorld) * camTrans;
 		}
 
 		void moveForward(float dist) { m_Position += m_Forward * dist; }
@@ -34,6 +45,8 @@ class Camera
 		float getPitch() { return m_Pitch; }
 		float getYaw() { return m_Yaw; }
 
+		void setPosition(glm::vec3 position) { m_Position = position; }
+
 		glm::vec3 getForward() { return m_Forward; }
 		glm::vec3 getUp() { return m_Up; }
 		glm::vec3 getRight() { return m_Right; }
@@ -41,11 +54,16 @@ class Camera
 	private:
 		void calculateVectors()
 		{
+			if (m_Pitch > 89.0f)
+				m_Pitch = 89.0f;
+			if (m_Pitch < -89.0f)
+				m_Pitch = -89.0f;
+
 			m_Forward.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
 			m_Forward.y = sin(glm::radians(m_Pitch));
 			m_Forward.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
 			m_Forward = glm::normalize(m_Forward);
-
+		
 			m_Right = glm::normalize(glm::cross(m_Forward, m_WorldUp));
 			m_Up = glm::normalize(glm::cross(m_Right, m_Forward));
 		}

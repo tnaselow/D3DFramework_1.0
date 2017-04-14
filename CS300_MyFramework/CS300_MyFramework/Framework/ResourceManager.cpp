@@ -32,6 +32,60 @@ float heightLookup(int x, int y, unsigned char *data, unsigned stride)
 	return data[x * 4 + y * stride] / 255.0f;
 }
 
+Texture2D *ResourceManager::loadCubeMap(std::string name, std::string dir, std::string extension)
+{
+	auto iter = m_Textures.find(name);
+	if (iter != m_Textures.end())
+		return &m_Textures[name];
+
+	int width, height;
+	int numChannels;
+	
+	D3D11_SUBRESOURCE_DATA pData[6];
+	
+	unsigned char *images[6];
+	for(int i = 0; i < 6; ++i)
+	{
+		assert(images[0] != nullptr);
+		images[i] = stbi_load((dir + name + std::to_string(i) + extension).c_str(), &width, &height, &numChannels, 4);
+		pData[i].pSysMem = images[i];
+		pData[i].SysMemPitch = width * 4;
+		pData[i].SysMemSlicePitch = 0;
+	}
+
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(texDesc));
+	texDesc.Width = width;
+	texDesc.Height = height;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 6;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC resDesc;
+	ZeroMemory(&resDesc, sizeof(resDesc));
+	resDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	resDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	resDesc.TextureCube.MipLevels = 1;
+	resDesc.TextureCube.MostDetailedMip = 0;
+
+	ID3D11Texture2D *texture;
+	HR(Renderer_D3D::getDevice()->CreateTexture2D(&texDesc, &pData[0], &texture));
+	HR(Renderer_D3D::getDevice()->CreateShaderResourceView(texture, &resDesc, &m_Textures[name].m_SRV));
+
+	SafeRelease(texture);
+	for(int i = 0; i < 6; ++i)
+		stbi_image_free(images[i]);
+	
+	return &m_Textures[name];
+}
+
 Texture2D *ResourceManager::createNormalMap(std::string name, std::string dir, std::string extension /*= ".tga"*/)
 {
 	auto iter = m_Textures.find(name);

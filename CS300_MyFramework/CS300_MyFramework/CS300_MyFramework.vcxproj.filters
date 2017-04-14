@@ -266,5 +266,9 @@
     <FxCompile Include="Shaders\PhongVert_PS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_VS.hlsl" />
     <FxCompile Include="Shaders\PhongPix_PS.hlsl" />
+    <FxCompile Include="Shaders\SkyBox_VS.hlsl" />
+    <FxCompile Include="Shaders\SkyBox_PS.hlsl" />
+    <FxCompile Include="Shaders\ReflectionShader_PS.hlsl" />
+    <FxCompile Include="Shaders\ReflectionShader_VS.hlsl" />
   </ItemGroup>
 </Project>

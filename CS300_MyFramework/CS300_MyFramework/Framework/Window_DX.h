@@ -22,14 +22,14 @@ class Window_DX
 
 		bool Loop();
 
-		int getWidth() { return mWidth; }
-		int getHeight() { return mHeight; }
+		static int getWidth() { return mWidth; }
+		static int getHeight() { return mHeight; }
 	private:
 		static LRESULT CALLBACK DefaultWinCallback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	
 	private:
 		HWND mWindHandle;
-		int mWidth, mHeight;
+		static int mWidth, mHeight;
 		HINSTANCE mHInstance;
 		static bool mClosing;
 };

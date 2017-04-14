@@ -24,6 +24,7 @@ End Header --------------------------------------------------------*/
 #include <ctime>
 #include "Camera.h"
 #include <glm/gtc/matrix_transform.inl>
+#include "Window_DX.h"
 
 #define PI 3.14159265359f
 
@@ -31,15 +32,19 @@ namespace
 {
 	Entity e1;
 	Entity eFloor;
+	Entity eSkyBox;
+
 	Shader shader;
 
+	Shader *skyShader;
 	Shader *colorShader;
+	Shader *reflShader;
 	bool rotating = true;
 
 	LightBufferData lightData;
 
 	ID3D11Buffer *ProjectionBuffer;
-	Camera cam(glm::vec3(0, 0, -1));
+	Camera cam(glm::vec3(0, 0, 1));
 	
 }
 
@@ -49,6 +54,8 @@ namespace Sandbox
 	{
 		shader.loadPreCopiled("../Debug/", "PhongPix", true);
 		colorShader = ResourceManager::loadShader("Color", "../Debug/");
+		skyShader = ResourceManager::loadShader("SkyBox", "../Debug/");
+		reflShader = ResourceManager::loadShader("ReflectionShader", "../Debug/");
 		//colorShader.loadPreCopiled("../Debug/", "Color");
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);
 		Renderer_D3D::getDevContext()->RSSetState(Renderer_D3D::mRasterState);
@@ -58,17 +65,28 @@ namespace Sandbox
 		//Texture2D *norm = ResourceManager::loadTexture("pillowNormal", "../textures/", ".png");
 		Renderer_D3D::getDevContext()->PSSetShaderResources(0, 1, &tex->m_SRV);
 		Renderer_D3D::getDevContext()->PSSetShaderResources(1, 1, &norm->m_SRV);
+
+
+		eFloor.mMesh = ResourceManager::loadMesh("cube", "../models/cube.obj");
+		eFloor.mPosition.z = -14;
+		eFloor.mPosition.y = -14;
+		eFloor.mScale = glm::vec3(20, 20, 20);
+
 	
-		e1.mMesh = ResourceManager::loadMesh("sword", "../models/sword.obj");
-		e1.mPosition.z = 5;
+		e1.mMesh = ResourceManager::loadMesh("sphere", "../models/sphere.obj");//ResourceManager::loadMesh("sword", "../models/sword.obj");
+		e1.mPosition.z = -5;
 		e1.mPosition.y = -2;
 		e1.mMaterial.diffuse = glm::vec4(0.25f, 0.25f, 0.25f, 1);
 		e1.mMaterial.specular = glm::vec4(0.25f, 0.25f, 0.25f, 1);
 
-		eFloor.mMesh = ResourceManager::loadMesh("cube", "../models/cube.obj");
-		eFloor.mPosition.z = 14;
-		eFloor.mPosition.y = -14;
-		eFloor.mScale = glm::vec3(20, 20, 20);
+
+		Texture2D *skyTex = ResourceManager::loadCubeMap("sky", "../textures/", ".jpg");
+		
+		Renderer_D3D::getDevContext()->PSSetShaderResources(3, 1, &skyTex->m_SRV);
+
+		eSkyBox.mMesh = ResourceManager::getMesh("cube");
+		eSkyBox.mScale = glm::vec3(1, 1, 1);
+		eSkyBox.mPosition = glm::vec3(0, 0, 0);
 
 		
 		lightData.camPosition = glm::vec3(0, 0, 0);
@@ -103,15 +121,17 @@ namespace Sandbox
 
 	void update()
 	{
-		//glm::mat4x4 projMat = glm::perspectiveRH(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
-		glm::mat4x4 projMat = glm::perspectiveRH(45.0f, 1.0f, 0.1f, 100.0f);
-		glm::mat4 camMat = cam.getTransform();
+		glm::mat4x4 projMat = glm::perspectiveRH(45.0f, static_cast<float>(Window_DX::getWidth()) / Window_DX::getHeight() , 0.1f, 100.0f);
+		//glm::mat4x4 projMat = glm::perspectiveRH(90.0f, 1.0f, 0.1f, 100.0f);
+		glm::mat4 camMat = glm::transpose(cam.getTransform());
 		glm::mat4 projData[2] =
 		{
 			camMat,
 			projMat
 		};
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, projData, SHADER_VERTEX);
+
+		Renderer_D3D::DrawEntity(eSkyBox, *skyShader);
 
 		static float timer = 0;
 		timer = clock() * 0.001f;
@@ -124,12 +144,14 @@ namespace Sandbox
 
 				float angle = ((i + 1.0f) / lightData.numLights) * 2 * PI;
 
-				lightData.lights[i].position = glm::vec4(cos(angle + timer) * radius, 0, sin(angle + timer) * radius + 5, 0);
+				lightData.lights[i].position = glm::vec4(cos(angle + timer) * radius, 0, sin(angle + timer) * radius - 5, 0);
 				lightData.lights[i].direction = glm::normalize( glm::vec4(e1.mPosition.xyz, 1) - lightData.lights[i].position);
 			}
 			
 			e1.mRotation.x += 0.001f;
 			e1.mRotation.z += 0.001f;
+
+
 		}
 
 
@@ -145,14 +167,15 @@ namespace Sandbox
 		}
 		ImGui::Separator();
 		static float yaw = -90;
-		ImGui::SliderFloat("Yaw", &yaw, -90, 90);
+		ImGui::SliderFloat("Yaw", &yaw, -180, 180);
 		cam.setYaw(yaw);
 
 		static float pitch = 0;
-		ImGui::SliderFloat("Pitch", &pitch, -90, 90);
+		ImGui::SliderFloat("Pitch", &pitch, -180, 180);
 		cam.setPitch(pitch);
 
 		ImGui::Separator();
+
 
 		ImGui::Checkbox("Blinn", reinterpret_cast<bool *>(&lightData.useBlinn));
 		ImGui::Checkbox("Rotating", &rotating);
@@ -217,7 +240,7 @@ namespace Sandbox
 
 		ImGui::End();
 		
-		Renderer_D3D::DrawEntity(e1, shader);
+		Renderer_D3D::DrawEntity(e1, *reflShader);
 		//Renderer_D3D::DrawEntity(eFloor, shader);
 
 		Renderer_D3D::EndFrame();
