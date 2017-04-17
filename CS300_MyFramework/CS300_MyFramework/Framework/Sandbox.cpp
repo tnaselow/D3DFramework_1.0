@@ -54,7 +54,9 @@ namespace Sandbox
 		//Renderer_D3D::getDevContext()->VSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		//Renderer_D3D::getDevContext()->GSSetConstantBuffers(0, 1, &Renderer_D3D::mProjBuffer);
 		
-		loadModel(aEntity.m_Model, "../models/nanosuit/nanosuit.obj");
+		//loadModel(aEntity.m_Model, "../models/nanosuit/nanosuit.obj");
+		loadModel(aEntity.m_Model, "../models/boat2.fbx");
+		aEntity.m_Rotation.x = 90;
 		//loadModel(aEntity.m_Model, "../models/Vegeta/Vegeta.obj");
 
 		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, 0, nullptr, SHADER_VERTEX | SHADER_GEOMETRY);

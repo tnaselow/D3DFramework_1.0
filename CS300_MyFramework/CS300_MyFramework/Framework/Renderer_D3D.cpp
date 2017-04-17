@@ -243,8 +243,8 @@ void Renderer_D3D::EndFrameDeffered()
 
 	glm::mat4x4 model = glm::translate(glm::vec3(0,0,-5)) *
 		//glm::rotate(mEntities[0].mEntity.mRotation.z, glm::vec3(0, 0, 1)) *
-		//glm::rotate(mEntities[0].mEntity.mRotation.y, glm::vec3(0, 1, 0)) *
-		//glm::rotate(mEntities[0].mEntity.mRotation.x, glm::vec3(1, 0, 0)) *
+		//glm::rotate(glm::radians(90.0f), glm::vec3(0, 1, 0)) *
+		glm::rotate(glm::radians(90.0f), glm::vec3(1, 0, 0)) *
 		glm::scale(glm::vec3(1,1,1));
 
 	glm::mat4x4 normModel = model;
