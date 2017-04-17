@@ -28,9 +28,11 @@ class ResourceManager
 		static Texture2D *loadTexture(std::string name, std::string dir, std::string extension = ".png");
 		static Texture2D *getTexture(std::string name);
 
-		static Texture2D *loadCubeMap(std::string name, std::string dir, std::string extension = ".jpg");
+		static Texture2D *loadCubeMap(std::string name, std::string dir, std::string extension = ".jpg", Texture2D *textures[6] = nullptr);
 
 		static Texture2D *createNormalMap(std::string name, std::string dir, std::string extension = ".tga");
+
+		static Texture2D *createTexture(std::string name, bool rtv, bool srv, unsigned width, unsigned height, char *data, bool dsv);
 
 		static void cleanup();
 

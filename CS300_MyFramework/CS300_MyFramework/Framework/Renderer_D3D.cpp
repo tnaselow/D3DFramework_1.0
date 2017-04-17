@@ -37,8 +37,7 @@ std::vector<EntityShader>    Renderer_D3D::mEntities;
 ID3D11Buffer           *Renderer_D3D::mLineBuffer;
 ID3D11DepthStencilState *Renderer_D3D::mDepthStencilState;
 
-ID3D11RenderTargetView   *Renderer_D3D::mEnviorns_RTV[6];
-ID3D11ShaderResourceView *Renderer_D3D::mEviorns_SRV[6];
+Texture2D *Renderer_D3D::mEnviornTextures[6];
 
 
 
@@ -47,6 +46,7 @@ bool Renderer_D3D::m_RenderNormals    = false;
 bool Renderer_D3D::m_RenderTangents   = false;
 bool Renderer_D3D::m_RenderBiTangents = false;
 int Renderer_D3D::m_UseNormalMapAsTex = false;
+float Renderer_D3D::m_RRBlendFactor = 0;
 
 
 
@@ -182,12 +182,21 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	//};
 
 	// generate enviornment map texture stuff -------------------------
-	
 	for(int i = 0; i < 6; ++i)
-	{
-		
-	}
+		mEnviornTextures[i] = ResourceManager::createTexture("Enviorn" + i, true, true, 2048, 2048, nullptr, false);
 
+	depthStencilDesc.Width = 2048;
+	depthStencilDesc.Height = 2048;
+
+	ID3D11Texture2D *edTexture;
+	HR(mDevice->CreateTexture2D(&depthStencilDesc, NULL, &edTexture));
+	HR(mDevice->CreateDepthStencilView(edTexture, NULL, &mEnviornTextures[0]->m_DSV));
+	SafeRelease(edTexture);
+
+
+	//-------------------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------------
 
 	makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC);
 	//makeCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, USAGE_DYNAMIC, &projMat);
@@ -197,6 +206,53 @@ void Renderer_D3D::Initialize(HWND hwnd, int width, int height)
 	makeCBuffer(BUFFER_NORMAL_TYPE, 16, USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_COLOR, sizeof(glm::vec4), USAGE_DYNAMIC);
 	makeCBuffer(BUFFER_MISC, 16, USAGE_DYNAMIC);
+}
+
+void Renderer_D3D::genEnviornMap(glm::vec3 pos, Camera cam)
+{
+	unsigned n = 1;
+	D3D11_VIEWPORT vp;
+	mDeviceContext->RSGetViewports(&n, &vp);
+	int width = vp.Width;
+	int height = vp.Height;
+
+	vp.Width = 2048;
+	vp.Height = 2048;
+	mDeviceContext->RSSetViewports(1, &vp);
+
+
+	glm::mat4x4 projMat = glm::perspectiveRH(90.0f, 1.0f, 0.1f, 100.0f);
+	cam.setPosition(pos);
+	float origYaw = cam.getYaw();
+	for(int i = 0; i < 4; ++i)
+	{
+		// clear render target
+		mDeviceContext->ClearRenderTargetView(mEnviornTextures[i]->m_RTV, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+		mDeviceContext->ClearDepthStencilView(mEnviornTextures[0]->m_DSV, D3D11_CLEAR_DEPTH, 1, 0);
+
+		// rotate camera
+		cam.setYaw(origYaw + 90 * i);
+		glm::mat4 camMat = cam.getTransform();
+		glm::mat4 projData[2] =
+		{
+			camMat,
+			projMat
+		};
+		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, projData, SHADER_VERTEX);
+
+		mDeviceContext->OMSetRenderTargets(1, &mEnviornTextures[i]->m_RTV, mEnviornTextures[0]->m_DSV);
+		
+		// draw entities to frame buffer
+		DrawEntities();
+	}
+
+	for(int i = 0; i < 6; ++i)
+		mDeviceContext->PSSetShaderResources(i + 4, 1, &mEnviornTextures[i]->m_SRV);
+	
+	vp.Width = width;
+	vp.Height = height;
+	mDeviceContext->RSSetViewports(1, &vp);
+	mDeviceContext->OMSetRenderTargets(1, &mRTV_BackBuffer, mRTV_DepthStencil);
 }
 
 void Renderer_D3D::makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data)
@@ -304,10 +360,8 @@ void Renderer_D3D::renderTangentsBiTangents(const Mesh &mesh, Lines line)
 
 }
 
-void Renderer_D3D::EndFrame()
+void Renderer_D3D::DrawEntities()
 {
-	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-	mDeviceContext->ClearDepthStencilView(mRTV_DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	
@@ -351,7 +405,17 @@ void Renderer_D3D::EndFrame()
 
 		mapCBuffer(BUFFER_MATERIAL, sizeof(Material), &mEntities[i].mEntity.mMaterial, SHADER_PIXEL);
 		mapCBuffer(BUFFER_COLOR, sizeof(glm::vec4), &mEntities[i].mEntity.mColor, SHADER_VERTEX);
-		mapCBuffer(BUFFER_MISC, sizeof(int), &m_UseNormalMapAsTex, SHADER_PIXEL);
+
+		struct miscBuffer
+		{
+			int usenormal;
+			float blend;
+		};
+
+		miscBuffer ms;
+		ms.usenormal = m_UseNormalMapAsTex;
+		ms.blend = m_RRBlendFactor;
+		mapCBuffer(BUFFER_MISC, sizeof(int) * 2, &ms, SHADER_PIXEL);
 
 		mEntities[i].mShader->Bind(SHADER_VERTEX | SHADER_PIXEL);
 
@@ -365,12 +429,20 @@ void Renderer_D3D::EndFrame()
 
 		mDeviceContext->DrawIndexed(mEntities[i].mEntity.mMesh->mIndices.size(), 0, 0);
 	}
+}
+
+void Renderer_D3D::EndFrame()
+{
 	mEntities.clear();
 	Shader::unBind();
 
 	GUI::UpdateAndDraw();
 	mSwapChain->Present(0, 0);
+
+	mDeviceContext->ClearRenderTargetView(mRTV_BackBuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	mDeviceContext->ClearDepthStencilView(mRTV_DepthStencil, D3D11_CLEAR_DEPTH, 1, 0);
 }
+
 
 
 void Renderer_D3D::CleanUp()

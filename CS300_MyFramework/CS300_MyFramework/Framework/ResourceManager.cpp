@@ -32,7 +32,7 @@ float heightLookup(int x, int y, unsigned char *data, unsigned stride)
 	return data[x * 4 + y * stride] / 255.0f;
 }
 
-Texture2D *ResourceManager::loadCubeMap(std::string name, std::string dir, std::string extension)
+Texture2D *ResourceManager::loadCubeMap(std::string name, std::string dir, std::string extension, Texture2D *textures[6])
 {
 	auto iter = m_Textures.find(name);
 	if (iter != m_Textures.end())
@@ -61,7 +61,7 @@ Texture2D *ResourceManager::loadCubeMap(std::string name, std::string dir, std::
 	texDesc.MipLevels = 1;
 	texDesc.ArraySize = 6;
 	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags = 0;
+	texDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
@@ -276,6 +276,72 @@ Texture2D *ResourceManager::loadTexture(std::string name, std::string dir, std::
 	SafeRelease(texture);
 	stbi_image_free(image);
 	delete[] fourChannelImage;
+
+	return &m_Textures[name];
+}
+
+Texture2D *ResourceManager::createTexture(std::string name, bool rtv, bool srv, unsigned width, unsigned height, char *data, bool dsv)
+{
+	auto it = m_Textures.find(name);
+	if (it != m_Textures.end())
+		return &m_Textures[name];
+
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+	textureDesc.Width = width;
+	textureDesc.Height = height;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // bad
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	ID3D11Texture2D *texture = nullptr;
+	if (srv | rtv)
+		HR(Renderer_D3D::getDevice()->CreateTexture2D(&textureDesc, nullptr, &texture));
+
+	m_Textures[name].m_Width = width;
+	m_Textures[name].m_Height = height;
+
+	if (rtv)
+	{
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+		ZeroMemory(&rtvDesc, sizeof(rtvDesc));
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		HR(Renderer_D3D::getDevice()->CreateRenderTargetView(texture, &rtvDesc, &m_Textures[name].m_RTV));
+	}
+
+	if (srv)
+	{
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		ZeroMemory(&srvDesc, sizeof(srvDesc));
+		srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+
+		HR(Renderer_D3D::getDevice()->CreateShaderResourceView(texture, &srvDesc, &m_Textures[name].m_SRV));
+	}
+
+	if (dsv)
+	{
+		// for future trevor you cannot do depth textures like this it runs into issues
+		textureDesc.Format = DXGI_FORMAT_R32_UINT;
+
+		if (srv | rtv)
+			HR(Renderer_D3D::getDevice()->CreateTexture2D(&textureDesc, nullptr, &texture));
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsDesc;
+		ZeroMemory(&dsDesc, sizeof(dsDesc));
+		dsDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		dsDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+		HR(Renderer_D3D::getDevice()->CreateDepthStencilView(texture, &dsDesc, &m_Textures[name].m_DSV));
+	}
 
 	return &m_Textures[name];
 }

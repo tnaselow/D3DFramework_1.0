@@ -19,21 +19,20 @@ class Camera
 
 		glm::mat4 getTransform()
 		{
-			//return glm::inverse(glm::mat4(glm::vec4(m_Right.xyz, 0),
-			//	glm::vec4(m_Up.xyz, 0),
-			//	glm::vec4(m_Forward.xyz, 0),
-			//	glm::vec4(m_Position.xyz, 1)));
+			return glm::inverse(glm::mat4(glm::vec4(m_Right.x, m_Right.y, m_Right.z, 0),
+					glm::vec4(m_Up.x, m_Up.y, m_Up.z, 0), -glm::vec4(m_Forward.x, m_Forward.y, m_Forward.z, 0),
+				glm::vec4(m_Position, 1)));
 
-			glm::mat4 camToWorld(glm::mat4(glm::vec4(m_Right.xyz, 0),
-				glm::vec4(m_Up.xyz, 0),
-				-glm::vec4(m_Forward.xyz, 0), glm::vec4(0, 0, 0, 1)));
-
-			glm::mat4 camTrans(glm::vec4(1, 0, 0, 0),
-				glm::vec4(0, 1, 0, 0),
-				glm::vec4(0, 0, 1, 0),
-				glm::vec4(-m_Position, 1));
-
-			return glm::transpose(camToWorld) * camTrans;
+			//glm::mat4 camToWorld(glm::mat4(glm::vec4(m_Right.x, m_Right.y, m_Right.z, 0),
+			//	glm::vec4(m_Up.x, m_Up.y, m_Up.z, 0),
+			//	-glm::vec4(m_Forward.x, m_Forward.y, m_Forward.z, 0), glm::vec4(0, 0, 0, 1)));
+			//
+			//glm::mat4 camTrans(glm::vec4(1, 0, 0, 0),
+			//	glm::vec4(0, 1, 0, 0),
+			//	glm::vec4(0, 0, 1, 0),
+			//	glm::vec4(-m_Position, 1));
+			//
+			//return glm::transpose(camToWorld) * camTrans;
 		}
 
 		void moveForward(float dist) { m_Position += m_Forward * dist; }
@@ -50,6 +49,8 @@ class Camera
 		glm::vec3 getForward() { return m_Forward; }
 		glm::vec3 getUp() { return m_Up; }
 		glm::vec3 getRight() { return m_Right; }
+
+		glm::vec3 getPosition() { return m_Position; }
 
 	private:
 		void calculateVectors()

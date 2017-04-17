@@ -121,15 +121,7 @@ namespace Sandbox
 
 	void update()
 	{
-		glm::mat4x4 projMat = glm::perspectiveRH(45.0f, static_cast<float>(Window_DX::getWidth()) / Window_DX::getHeight() , 0.1f, 100.0f);
-		//glm::mat4x4 projMat = glm::perspectiveRH(90.0f, 1.0f, 0.1f, 100.0f);
-		glm::mat4 camMat = glm::transpose(cam.getTransform());
-		glm::mat4 projData[2] =
-		{
-			camMat,
-			projMat
-		};
-		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, projData, SHADER_VERTEX);
+
 
 		Renderer_D3D::DrawEntity(eSkyBox, *skyShader);
 
@@ -174,6 +166,11 @@ namespace Sandbox
 		ImGui::SliderFloat("Pitch", &pitch, -180, 180);
 		cam.setPitch(pitch);
 
+		static float z = 0;
+		ImGui::SliderFloat("camZpos", &z, 0, 5);
+		cam.setPosition(glm::vec3(0, 0, z));
+
+
 		ImGui::Separator();
 
 
@@ -193,6 +190,7 @@ namespace Sandbox
 		ImGui::Checkbox("Draw Tangents", &Renderer_D3D::m_RenderTangents);
 		ImGui::Checkbox("Draw BiTangents", &Renderer_D3D::m_RenderBiTangents);
 		ImGui::Checkbox("Use Normal Map as Tex", reinterpret_cast<bool*>(&Renderer_D3D::m_UseNormalMapAsTex));
+		ImGui::SliderFloat("Reflect/Refract", &Renderer_D3D::m_RRBlendFactor, 0, 1);
 
 
 		if(ImGui::CollapsingHeader("Material"))
@@ -240,8 +238,20 @@ namespace Sandbox
 
 		ImGui::End();
 		
+		Renderer_D3D::genEnviornMap(e1.mPosition, cam);
+		glm::mat4x4 projMat = glm::perspectiveRH(45.0f, static_cast<float>(Window_DX::getWidth()) / Window_DX::getHeight(), 0.1f, 100.0f);
+		//glm::mat4x4 projMat = glm::perspectiveRH(90.0f, 1.0f, 0.1f, 100.0f);
+		glm::mat4 camMat = cam.getTransform();
+		glm::mat4 projData[2] =
+		{
+			camMat,
+			projMat
+		};
+		Renderer_D3D::mapCBuffer(BUFFER_PROJECTION, sizeof(glm::mat4) * 2, projData, SHADER_VERTEX);
+
 		Renderer_D3D::DrawEntity(e1, *reflShader);
 		//Renderer_D3D::DrawEntity(eFloor, shader);
+		Renderer_D3D::DrawEntities();
 
 		Renderer_D3D::EndFrame();
 	}

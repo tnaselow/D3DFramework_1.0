@@ -76,6 +76,7 @@ cbuffer MATERIAL_BUFFER : register(b3)
 cbuffer MISC_BUFFER : register(b6)
 {
 	int useNormalMapTex;
+	float blendEffect;
 }
 
 

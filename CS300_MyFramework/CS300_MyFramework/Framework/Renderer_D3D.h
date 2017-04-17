@@ -18,6 +18,8 @@ End Header --------------------------------------------------------*/
 #include <vector>
 #include "Sandbox.h"
 #include "Shader.h"
+#include "Texture2D.h"
+#include "Camera.h"
 
 class Mesh;
 class Shader;
@@ -63,6 +65,7 @@ class Renderer_D3D
 
 		static void DrawEntity(Entity &entity, Shader &shader);
 		static void EndFrame();
+		static void DrawEntities();
 
 		static ID3D11Device	*getDevice() { return mDevice; }
 		static ID3D11DeviceContext *getDevContext() { return mDeviceContext; }
@@ -75,7 +78,7 @@ class Renderer_D3D
 		static void makeCBuffer(BufferTypes buffer, size_t size, BufferUsage usage, const void *data = nullptr);
 		static void mapCBuffer(BufferTypes buffer, size_t size, const void *data, unsigned bindType, int bindRegister = -1);
 
-		static void genEnviornMap(glm::vec3 pos);
+		static void genEnviornMap(glm::vec3 pos, Camera cam);
 
 		static ID3D11RasterizerState  *mRasterState;
 
@@ -83,9 +86,10 @@ class Renderer_D3D
 		static bool m_RenderTangents;
 		static bool m_RenderBiTangents;
 		static int m_UseNormalMapAsTex;
+		static float m_RRBlendFactor;
 	private:
-		static ID3D11RenderTargetView *mEnviorns_RTV[6];
-		static ID3D11ShaderResourceView *mEviorns_SRV[6];
+		static Texture2D *mEnviornTextures[6];
+		static ID3D11ShaderResourceView *mReflTexture;
 
 		static IDXGISwapChain	   *mSwapChain;
 		static std::vector<EntityShader> mEntities;
